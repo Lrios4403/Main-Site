@@ -1,0 +1,10 @@
+{
+  "pkg": "current",
+  "globalName": "DS",
+  "shape": "package",
+  "entry": "./.design-sync/entry.tsx",
+  "srcDir": "components",
+  "componentSrcMap": { "Window": "components/window/Window.tsx" },
+  "cssEntry": ".design-sync/ds-tokens.css",
+  "tsconfig": ".design-sync/tsconfig.bundle.json"
+}

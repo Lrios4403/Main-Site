@@ -1,0 +1,68 @@
+/* Blog post content formatting (scoped to the content area).
+   Element selectors restyle the headings, paragraphs, and lists that
+   Tailwind's preflight otherwise strips bare. */
+
+.prose h1 {
+  margin: 1.4rem 0 0.5rem;
+  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: #8fd3ff;
+}
+.prose h1:first-child {
+  margin-top: 0;
+}
+
+.prose h2 {
+  margin: 1.2rem 0 0.4rem;
+  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  font-size: 1.15rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: #b8d2ee;
+}
+
+/* Spans are used here as paragraphs — make them block-level with spacing */
+.prose span {
+  display: block;
+  margin: 0.55rem 0;
+  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  font-size: 1rem;
+  line-height: 1.65;
+  color: #c9d6ec;
+}
+/* …but keep spans that sit inside a list item inline */
+.prose li span {
+  display: inline;
+  margin: 0;
+}
+
+/* Nested, bulleted lists with proper indentation */
+.prose ul {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+  list-style: disc;
+}
+.prose ul ul {
+  margin: 0.35rem 0;
+  list-style: circle;
+}
+.prose ul ul ul {
+  list-style: square;
+}
+.prose li {
+  margin: 0.3rem 0;
+  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #c9d6ec;
+}
+
+.prose u {
+  text-underline-offset: 2px;
+}
+.prose i {
+  font-style: italic;
+}

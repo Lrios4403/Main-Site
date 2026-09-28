@@ -1,0 +1,19 @@
+/* Design-system tokens for the claude.ai/design bundle.
+   The site normally injects these font CSS variables via next/font at runtime;
+   the bundle has no Next runtime, so define them here. Toshiba ships as a real
+   @font-face (the woff lives in the repo). Geist is served from Google by
+   next/font in the app — substituted with a system stack here (see NOTES.md). */
+
+@font-face {
+  font-family: "Toshiba TXL1";
+  src: url("../public/fonts/Toshiba-TXL1.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --font-toshiba: "Toshiba TXL1", "Courier New", Courier, monospace;
+  --font-geist-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-geist-mono: ui-monospace, "Cascadia Code", "SFMono-Regular", "Courier New", monospace;
+}

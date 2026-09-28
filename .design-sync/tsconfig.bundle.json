@@ -1,0 +1,10 @@
+{
+  "//": "Bundle-only tsconfig for design-sync. The converter's esbuild plugin reads baseUrl+paths (it does NOT follow `extends`) and applies them to CSS url() resolution too, so /main/* (a Next public/ path) resolves to public/main/* and the noise.svg grain inlines into the bundle. baseUrl is relative to this file's dir (.design-sync), so .. = repo root.",
+  "compilerOptions": {
+    "baseUrl": "..",
+    "paths": {
+      "@/*": ["./*"],
+      "/main/*": ["./public/main/*"]
+    }
+  }
+}

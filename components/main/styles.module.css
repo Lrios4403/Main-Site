@@ -1,0 +1,285 @@
+/* Main page (index) styles — CSS Module (locally scoped) */
+
+.mainWrapper {
+  position: relative;
+  display: flex;
+  align-items: flex-start; /* anchor the grid to the top so the title's
+                              vertical position is identical on every page
+                              (centering made it jump between short/tall pages) */
+  justify-content: center;
+  min-height: 100vh;
+  width: 100%;
+  padding-block: 2rem; /* breathing room above/below instead of flush-top */
+  box-sizing: border-box;
+  isolation: isolate; /* contain blend modes to this stacking context */
+}
+
+/* Full-viewport background as its own fixed layer. Sized in vw/vh — which
+   INCLUDE the scrollbar width — so it never rescales or re-crops when a
+   scrollbar appears/disappears or the page height changes. (background-attachment:
+   fixed keyed off the viewport minus the scrollbar, which is what shifted.) */
+.mainWrapper::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -20;
+  background-image: url("/main/bgdark.jpeg");
+  background-size: cover;
+  background-position: center bottom;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+
+/* Container that locks the grid to a 4:3 aspect ratio and centers it.
+   Width is capped by whichever of viewport width / height fits, so the
+   4:3 box never overflows the screen. */
+.gridContainer {
+  position: relative;
+  z-index: 10;
+  width: min(1200px, 92vw, calc(92vh * 4 / 3));
+  aspect-ratio: 4 / 3;
+  /* Center on the FULL viewport, not the scrollbar-reduced content box, so the
+     grid's x-position is identical whether or not a scrollbar is present.
+     (100vw includes the scrollbar; 100% excludes it — the difference is the
+     scrollbar width, and half of it compensates the flex-centering shift.)
+     The scrollbar itself stays `auto`: shown only when there's overflow. */
+  left: calc((100vw - 100%) / 2);
+}
+
+/* Full-bleed background image container */
+.bgContainer {
+  position: absolute;
+  inset: 0;
+  z-index: -10;
+}
+
+/* The next/image element (fill) inside the background container */
+.bgImage {
+  object-fit: cover;
+  object-position: center;
+}
+
+/* Grainy noise overlay (SVG feTurbulence) blended onto the photo */
+.grainOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: -5;
+  background-image: url("/main/noise.svg");
+  background-repeat: repeat;
+  filter: contrast(170%) brightness(1000%);
+  mix-blend-mode: overlay;
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+/* Foreground layout grid — child windows snap into named areas */
+.grid {
+  display: grid;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 100%;
+  align-items: start; /* windows hug their content height */
+  gap: 1rem;
+  padding: 1.5rem;
+  /* Fixed nav column so the content columns stay the same width on every
+     page — an `auto` column sized to the nav's text, which varies per page
+     (short site nav vs a long post's in-page nav) and shifted the layout. */
+  grid-template-columns: 17rem 1fr 1fr;
+  grid-template-rows: auto 1fr 1fr auto;
+  grid-template-areas:
+    "header header header"
+    "navigation-lhs content content"
+    "empty content content"
+    "footer footer footer";
+}
+
+/* Grid-area placements (applied to <Window> via className) */
+.header {
+  grid-area: header;
+}
+.navLhs {
+  grid-area: navigation-lhs;
+}
+.contentArea {
+  grid-area: content;
+}
+.footer {
+  grid-area: footer;
+}
+
+/* Stack the areas on small screens */
+@media (max-width: 768px) {
+  .gridContainer {
+    width: 92vw;
+    aspect-ratio: auto;
+  }
+  .grid {
+    height: auto;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    grid-template-areas:
+      "header"
+      "navigation-lhs"
+      "content"
+      "footer";
+  }
+}
+
+/* Heading inside the content window */
+.title {
+  margin: 0;
+  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  font-size: 2.25rem;
+  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  background: linear-gradient(180deg, #eaf6ff 0%, #7fd1ff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Supporting copy beneath the heading */
+.subtitle {
+  margin: 0.9rem 0 0;
+  max-width: 44ch;
+  color: #aab8d4;
+  font-size: 1.05rem;
+  line-height: 1.65;
+}
+
+/* Body copy for the content window */
+.bodyText {
+  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  margin: 1rem 0 0;
+  max-width: 62ch;
+  color: #c9d6ec;
+  font-size: 1rem;
+  line-height: 1.7;
+}
+.bodyText:first-of-type {
+  margin-top: 0.75rem;
+}
+
+.list {
+  margin-top: 6px;
+  margin-left: 18px;
+  font-family: var(--font-toshiba), "Courier New", Courier, monospace;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: normal;
+  color: rgb(173, 216, 230);
+  list-style-type: "\2192  "; /* → arrow marker */
+  list-style-position: outside;
+}
+.list li {
+  display: list-item;
+  margin-bottom: 0.5rem;
+}
+.list > li:last-child {
+  margin-bottom: 0;
+}
+.navLink {
+  font: inherit;
+  color: rgb(135, 206, 250);
+  text-decoration: none;
+}
+.navLink:hover {
+  text-decoration: underline;
+}
+
+/* Nested sub-navigation (e.g. Archives under Current Projects) */
+.navSubList {
+  margin: 0.55rem 0 0;
+  padding: 0 0 0 20px;
+  list-style-type: "\2192  "; /* → arrow marker */
+  list-style-position: outside;
+}
+
+/* Footer text */
+/* Title heading — copied from old site (Mario World Pixel Color Font) */
+.brand {
+  margin: 0;
+  font-family: "Mario World Pixel Color Font", "Trebuchet MS", sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 2.4px;
+  color: rgb(173, 216, 230);
+  text-shadow:
+    rgb(0, 114, 198) -1px 1px 1px,
+    rgb(0, 114, 198) 1px -1px 1px;
+}
+
+/* Welcome line under the header title — copied from old site */
+.headerWelcome {
+  margin: 0.6rem 0 0;
+  font-family: var(--font-toshiba), "Courier New", Courier, monospace;
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: -0.3px;
+  line-height: 1.45;
+  color: #aac6e6;
+}
+
+/* Photo in the content window — floats so the bio wraps around it */
+.contentImageWrap {
+  float: right;
+  width: 300px;
+  max-width: 45%;
+  margin: 0.25rem 0 1rem 1.5rem;
+}
+.contentImage {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(8, 20, 45, 0.18);
+}
+@media (max-width: 768px) {
+  .contentImageWrap {
+    float: none;
+    width: 100%;
+    max-width: 100%;
+    margin: 1rem 0;
+  }
+}
+.footerText {
+  margin: 0;
+  text-align: center;
+  color: #93a4c4;
+  font-size: 0.9rem;
+}
+
+
+/* Recursive nested list (in-page navigation) — arrow markers, indents per level */
+.list {
+  margin: 0;
+  padding-left: 9px;
+  font-family: var(--font-toshiba), "Courier New", Courier, monospace;
+  font-size: 16px;
+  line-height: normal;
+  color: rgb(173, 216, 230);
+  list-style-type: "\2192  ";
+  list-style-position: outside;
+}
+.list li {
+  display: list-item;
+  margin-bottom: 0.5rem;
+}
+.list li:last-child {
+  margin-bottom: 0;
+}
+.list .list {
+  margin: 0.5rem 0 0;
+  padding-left: 18px;
+}
+.list a {
+  color: rgb(135, 206, 250);
+  text-decoration: none;
+}
+.list a:hover {
+  text-decoration: underline;
+}
