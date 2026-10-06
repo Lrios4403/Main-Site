@@ -1,0 +1,14 @@
+# Rebuilt inside the image
+node_modules
+.next
+
+# Not part of the site
+.git
+.claude
+.design-sync
+.ds-sync
+ds-bundle
+databases
+*.tsbuildinfo
+next-env.d.ts
+.env*
