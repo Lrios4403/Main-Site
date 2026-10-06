@@ -105,6 +105,7 @@
   font-family: var(--font-toshiba), "Courier New", Courier, monospace;
   font-size: 0.78rem;
   color: #93a4c4;
+  padding-top: 5px;
 }
 /* thin divider between the date and the tag row */
 .date::after {
@@ -120,10 +121,14 @@
   gap: 0.4rem;
   flex-wrap: wrap;
 }
+/* Whole-pixel sizes keep the pixel font crisp, and with a 12px line the
+   capitals sit exactly centered in the box. (At the old fractional 0.72rem
+   they rendered blurry and about 1px high.) */
 .tag {
-  padding: 0.12rem 0.5rem;
+  padding: 6px 8px 0px 8px;
   font-family: var(--font-toshiba), "Courier New", Courier, monospace;
-  font-size: 0.72rem;
+  font-size: 12px;
+  line-height: 12px;
   color: rgb(173, 216, 230);
   background: rgba(37, 99, 235, 0.18);
   border: 1px solid rgba(130, 180, 255, 0.25);

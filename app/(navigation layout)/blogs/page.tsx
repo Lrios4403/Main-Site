@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import styles from "@/components/main/styles.module.css";
+import PageHeader from "@/components/page-header/PageHeader";
 import Window from "@/components/window/Window";
 import list from "./page.module.css";
 
 export const metadata: Metadata = {
-  title: "Blog Postings",
-  description: "Blog posts on projects, tips, locations, and games.",
+  title: "M4cgyvers Bountifull Blog Posts.",
+  description:
+    "Here are a list of all of the thoughts or comments I have about anything happening on the Internet (or internet).",
 };
 
 type Post = {
@@ -20,32 +22,32 @@ type Post = {
 // The site's blog posts. Add new entries here as they're written.
 const posts: Post[] = [
   {
-    slug: "microsoft-azure-ai-900",
-    title: "Stuff I Learned for Microsoft Azure AI 900",
+    slug: "nextjs-ordered-table-layout",
+    title: "NextJS Ordered Table Layout",
     description:
-      "My notes and resources from studying for the Microsoft Azure AI-900 certification — machine learning, deep learning, computer vision, and NLP. Updated as I go.",
+      "Using CSS grid areas to arrange components across layouts and pages in the Next.js App Router, so widgets from different files always land in the same spot. Includes a live HTML demo and a full example project.",
     date: "2026",
-    status: "In progress",
-    tags: ["Azure", "AI", "900", "901", "Certification"],
+    tags: ["NextJS", "CSS Grid", "Layouts"],
+  },
+  {
+    slug: "llms-on-an-intel-npu",
+    title: "LLMs on an Intel NPU",
+    description:
+      "How I got Qwen3 8B running on my laptop's Intel AI Boost NPU with OpenVINO Model Server (or NoLlama), then hooked it into OpenWork and Claude Code, so small tasks stop burning Claude tokens and the GPU stays free.",
+    date: "2026",
+    tags: ["OpenVINO", "Intel NPU", "Qwen3", "Claude Code"],
   },
 ];
 
 export default function BlogList() {
   return (
     <>
-      <Window
-        title="Title"
-        className={styles.header}
-        bodyStyle={{ padding: "12px 16px 14px" }}
-      >
-        <h2 className={styles.brand}>Blog Postings</h2>
-        <p className={styles.headerWelcome}>
-          Notes, tips, and write-ups on the projects, certifications, and games
-          I&apos;m working through. More to come.
-        </p>
-      </Window>
+      <PageHeader title="M4cgyvers Bountifull Blog Posts.">
+        Here are a list of all of the thoughts or comments I have about
+        anything happening on the Internet (or internet).
+      </PageHeader>
 
-      <Window title="Blog Postings" className={styles.contentArea}>
+      <Window title="Blog Entries" className={styles.contentArea}>
         {posts.length === 0 ? (
           <p className={list.empty}>No postings yet. Check back soon!</p>
         ) : (
