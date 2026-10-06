@@ -80,6 +80,12 @@ All content is hardcoded:
   - The `.ico` holds smooth downscales; nearest-neighbor turns the 16 and 32px sizes into noise. The PNGs are crisp nearest-neighbor upscales.
 - `app/opengraph-image.tsx` renders the 1200x630 share image: the "Title" window, `assets/floppy-384.png` on the left and the site name in the Toshiba font on the right. It reads its files with `readFile` from `process.cwd()`.
 
+## Deployment
+
+- The site runs in Docker behind nginx. The `Dockerfile` builds with `bun --bun next build` and ships only the standalone server (`output: "standalone"` in `next.config.ts`), running `bun server.js` on `oven/bun:1-slim`.
+- The server runs on the Bun runtime, so `lib/views.ts` uses `bun:sqlite`. The database is in `/app/databases`. Mount a volume there, owned by uid 1000 (the image's `bun` user), or the counts reset with every new container.
+- In the production server, `request.nextUrl` takes its host from the bind address (`0.0.0.0:3000` in Docker), not from the request. Use the `Host` header when you need the real host, as the view tracker does.
+
 ## Design sync (claude.ai/design)
 
 `.design-sync/` configures bundling of the site's components into a claude.ai/design design system. It is committed.
