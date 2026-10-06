@@ -1,0 +1,32 @@
+/* Navigation colors copied from old site (layout_navigation): grey labels
+   and arrows, light blue links */
+.nav ul {
+  color: #b6b2b2;
+}
+/* li in the selector outranks the shared .list a rules */
+.nav li a {
+  color: #add8e6;
+}
+.nav li a:hover {
+  color: #87cefa;
+}
+
+/* 88x31 button wall — copied from old site (freinds.module.css) */
+.frens {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-evenly;
+  align-items: center;
+  gap: 6px;
+}
+.frens a {
+  display: block;
+  line-height: 0;
+}
+/* Fixed size like the old site, so non-88x31 images (the oekaki drawing)
+   get squashed into button shape instead of Tailwind's height: auto */
+.frens img {
+  width: 88px;
+  height: 31px;
+  image-rendering: pixelated;
+}

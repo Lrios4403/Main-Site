@@ -1,0 +1,57 @@
+/* Home intro — layout copied from old site: big floated "Hello World!",
+   Verite 9x14 copy, photo floated left into the second paragraph */
+
+.intro {
+  font-family: var(--font-verite), "Courier New", Courier, monospace;
+  font-size: 16px;
+  line-height: 1.35;
+  color: #c9d6ec;
+}
+.intro::after {
+  content: "";
+  display: block;
+  clear: both;
+}
+
+.intro p {
+  margin: 0;
+}
+
+.hello {
+  float: left;
+  padding-right: 8px;
+  font-size: 64px;
+  line-height: 1;
+}
+
+.first {
+  padding-top: 26px;
+}
+
+.spacer {
+  height: 20px;
+}
+
+.photo {
+  float: left;
+  width: 275px;
+  max-width: 45%;
+  margin: 2px 12px 4px 0;
+}
+
+@media (max-width: 768px) {
+  .hello {
+    float: none;
+    font-size: 44px;
+  }
+  .first {
+    padding-top: 12px;
+  }
+  .photo {
+    float: none;
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    margin: 0 0 12px;
+  }
+}

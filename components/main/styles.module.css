@@ -9,7 +9,7 @@
   justify-content: center;
   min-height: 100vh;
   width: 100%;
-  padding-block: 2rem; /* breathing room above/below instead of flush-top */
+  padding-block: 1.25rem; /* breathing room above/below instead of flush-top */
   box-sizing: border-box;
   isolation: isolate; /* contain blend modes to this stacking context */
 }
@@ -33,14 +33,13 @@
   pointer-events: none;
 }
 
-/* Container that locks the grid to a 4:3 aspect ratio and centers it.
-   Width is capped by whichever of viewport width / height fits, so the
-   4:3 box never overflows the screen. */
+/* Centered container for the grid. Its height follows the content, so the
+   footer sits right under the last window instead of at the bottom of a
+   fixed-ratio box. */
 .gridContainer {
   position: relative;
   z-index: 10;
-  width: min(1200px, 92vw, calc(92vh * 4 / 3));
-  aspect-ratio: 4 / 3;
+  width: min(1100px, 94vw);
   /* Center on the FULL viewport, not the scrollbar-reduced content box, so the
      grid's x-position is identical whether or not a scrollbar is present.
      (100vw includes the scrollbar; 100% excludes it — the difference is the
@@ -80,19 +79,29 @@
   display: grid;
   box-sizing: border-box;
   width: 100%;
-  min-height: 100%;
   align-items: start; /* windows hug their content height */
-  gap: 1rem;
-  padding: 1.5rem;
+  gap: 12px;
+  padding: 0.5rem;
   /* Fixed nav column so the content columns stay the same width on every
      page — an `auto` column sized to the nav's text, which varies per page
-     (short site nav vs a long post's in-page nav) and shifted the layout. */
-  grid-template-columns: 17rem 1fr 1fr;
-  grid-template-rows: auto 1fr 1fr auto;
+     (short site nav vs a long post's in-page nav) and shifted the layout.
+     Narrow like the old site's 190px sidebar. */
+  grid-template-columns: 13rem 1fr 1fr;
   grid-template-areas:
     "header header header"
+    "slideshow slideshow slideshow"
     "navigation-lhs content content"
-    "empty content content"
+    "footer footer footer";
+}
+
+/* Pages with the top navigation bar (the no-navigation group) get an extra
+   row for it under the header; other pages don't carry an empty row */
+.grid:has(> .topNav) {
+  grid-template-areas:
+    "header header header"
+    "topnav topnav topnav"
+    "slideshow slideshow slideshow"
+    "navigation-lhs content content"
     "footer footer footer";
 }
 
@@ -100,8 +109,22 @@
 .header {
   grid-area: header;
 }
+.topNav {
+  grid-area: topnav;
+}
+/* min-width: 0 lets the slide track scroll instead of widening the grid */
+.slideshow {
+  grid-area: slideshow;
+  min-width: 0;
+}
 .navLhs {
   grid-area: navigation-lhs;
+}
+/* Stacks the sidebar windows (navigation, views, frens) in the nav area */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 .contentArea {
   grid-area: content;
@@ -113,15 +136,23 @@
 /* Stack the areas on small screens */
 @media (max-width: 768px) {
   .gridContainer {
-    width: 92vw;
-    aspect-ratio: auto;
+    width: 94vw;
   }
   .grid {
-    height: auto;
+    padding: 0;
     grid-template-columns: 1fr;
-    grid-template-rows: auto;
     grid-template-areas:
       "header"
+      "slideshow"
+      "navigation-lhs"
+      "content"
+      "footer";
+  }
+  .grid:has(> .topNav) {
+    grid-template-areas:
+      "header"
+      "topnav"
+      "slideshow"
       "navigation-lhs"
       "content"
       "footer";
@@ -132,7 +163,7 @@
 .title {
   margin: 0;
   font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
-  font-size: 2.25rem;
+  font-size: 16px;
   line-height: 1.1;
   font-weight: 700;
   letter-spacing: -0.025em;
@@ -199,13 +230,14 @@
   list-style-position: outside;
 }
 
-/* Footer text */
 /* Title heading — copied from old site (Mario World Pixel Color Font) */
 .brand {
   margin: 0;
-  font-family: "Mario World Pixel Color Font", "Trebuchet MS", sans-serif;
-  font-size: 24px;
+  margin-top: .25rem;
+  font-family: var(--font-mario), "Trebuchet MS", sans-serif;
+  font-size: 32px;
   font-weight: 700;
+  line-height: 52px;
   letter-spacing: 2.4px;
   color: rgb(173, 216, 230);
   text-shadow:
@@ -213,11 +245,22 @@
     rgb(0, 114, 198) 1px -1px 1px;
 }
 
+/* Header text leaves room on the right for the pizza cube */
+.headerText {
+  padding-right: 120px;
+}
+@media (max-width: 768px) {
+  .headerText {
+    padding-right: 0;
+  }
+}
+
 /* Welcome line under the header title — copied from old site */
 .headerWelcome {
-  margin: 0.6rem 0 0;
+  margin: 0;
+  margin-top: -0.75rem;
   font-family: var(--font-toshiba), "Courier New", Courier, monospace;
-  font-size: 15px;
+  font-size: 18px;
   font-weight: 400;
   letter-spacing: -0.3px;
   line-height: 1.45;
@@ -246,11 +289,59 @@
     margin: 1rem 0;
   }
 }
+/* Footer: name and license on the left, a small link row on the right.
+   Stacks and centers on small screens. */
+.footerInner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 24px;
+}
 .footerText {
   margin: 0;
-  text-align: center;
-  color: #93a4c4;
+  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+}
+.footerName {
+  margin: 0;
   font-size: 0.9rem;
+  font-weight: 600;
+  color: #c9d6ec;
+}
+.footerLicense {
+  margin: 2px 0 0;
+  font-size: 0.8rem;
+  color: #93a4c4;
+}
+.footerLicense a {
+  color: #87cefa;
+  text-decoration: underline;
+  text-decoration-color: rgba(135, 206, 250, 0.4);
+  text-underline-offset: 2px;
+}
+.footerLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  font-family: var(--font-toshiba), "Courier New", Courier, monospace;
+  font-size: 14px;
+}
+.footerLinks a {
+  color: #87cefa;
+  text-decoration: none;
+}
+.footerLinks a:hover {
+  color: #b8e4ff;
+  text-decoration: underline;
+}
+@media (max-width: 768px) {
+  .footerInner {
+    flex-direction: column;
+    text-align: center;
+  }
+  .footerLinks {
+    justify-content: center;
+  }
 }
 
 
@@ -265,16 +356,18 @@
   list-style-type: "\2192  ";
   list-style-position: outside;
 }
+/* Tight spacing like the old site's navigation */
 .list li {
   display: list-item;
-  margin-bottom: 0.5rem;
+  margin-bottom: 3px;
+  line-height: 1.25;
 }
 .list li:last-child {
   margin-bottom: 0;
 }
 .list .list {
-  margin: 0.5rem 0 0;
-  padding-left: 18px;
+  margin: 3px 0 0;
+  padding-left: 16px;
 }
 .list a {
   color: rgb(135, 206, 250);

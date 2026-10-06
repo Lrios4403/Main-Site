@@ -11,10 +11,12 @@
   display: flex;
   flex-direction: column;
   border: 1px solid rgba(130, 180, 255, 0.22);
+  /* Last two insets: a faint Win98-style bevel (light top-left, dark bottom-right) */
   box-shadow:
     0 22px 55px rgba(0, 0, 0, 0.45),
     0 2px 8px rgba(0, 0, 0, 0.30),
-    inset 0 1px 0 rgba(255, 255, 255, 0.10);
+    inset 1px 1px 0 rgba(255, 255, 255, 0.16),
+    inset -1px -1px 0 rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(16px) saturate(160%);
   -webkit-backdrop-filter: blur(16px) saturate(160%);
 }
@@ -27,6 +29,9 @@
   align-items: center;
   min-height: 1.9rem;
   padding: 0.4rem 0.85rem;
+  /* Matches the window's corners (8px minus its 1px border), for windows
+     that turn off overflow: hidden, like the header */
+  border-radius: 7px 7px 0 0;
   background: linear-gradient(to right, #2563eb 70%, #22d3ee 100%);
   user-select: none;
 }
@@ -44,10 +49,26 @@
   pointer-events: none;
 }
 
-/* Title text — left aligned, sits above the grain */
-.titleText {
+/* Fake close button — copied from old site's Win98 title bar */
+.titleBar::after {
+  content: "X";
   position: relative;
   z-index: 1;
+  margin-left: auto;
+  padding-left: 0.75rem;
+  font-family: var(--font-toshiba), "Courier New", Courier, monospace;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* Title text — left aligned, sits above the grain. Two classes so page
+   styles that target bare spans (the blog post's .prose span) don't restyle it. */
+.titleBar .titleText {
+  position: relative;
+  z-index: 1;
+  display: inline;
+  margin: 0;
+  line-height: normal;
   font-family: var(--font-toshiba), "Courier New", Courier, monospace;
   text-align: left;
   color: #ffffff;
@@ -59,5 +80,5 @@
 
 /* Content area — sizes to its content (no scroll) */
 .body {
-  padding: 2.5rem 2.75rem;
+  padding: 1.1rem 1.35rem;
 }

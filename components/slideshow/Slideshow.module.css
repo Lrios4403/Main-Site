@@ -1,0 +1,108 @@
+/* Slideshow — card look copied from old site (slideshow.module.css + inline styles) */
+
+.slideshow {
+  font-family: var(--font-eagle), "Courier New", Courier, monospace;
+}
+
+/* Horizontally scrolling strip; dots scroll it to a card */
+.track {
+  display: flex;
+  gap: 1%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.track::-webkit-scrollbar {
+  display: none;
+}
+
+.slide {
+  flex: 0 0 22%;
+  scroll-snap-align: start;
+}
+
+/* The card is a size container, so its text scales with the card's width
+   (cqi units) instead of getting cut off on narrow screens */
+.card {
+  position: relative;
+  display: block;
+  aspect-ratio: 1920 / 1080;
+  overflow: hidden;
+  border-radius: 10px;
+  container-type: inline-size;
+  /* Shows through the tint on cards without a picture */
+  background: linear-gradient(135deg, #f4efe6, #c9d4e4);
+  color: black;
+  text-decoration: none;
+  transition: transform 0.3s ease;
+}
+.card:hover {
+  transform: translateY(-2px);
+}
+
+.image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Tinted wash over the whole card, caption pinned to the bottom */
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
+
+.caption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 0 5cqi 4cqi;
+}
+
+.title {
+  display: block;
+  overflow: hidden;
+  font-size: clamp(11px, 8.2cqi, 20px);
+  line-height: 1.15;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.line {
+  display: block;
+  margin-top: 0.15em;
+  font-size: clamp(8px, 5cqi, 12px);
+  line-height: 1.2;
+}
+
+.dots {
+  display: flex;
+  justify-content: center;
+  gap: 1.25rem;
+  margin-top: 0.5rem;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background-color: rgba(173, 216, 230, 0.35);
+  cursor: pointer;
+}
+.dotActive {
+  background-color: rgb(135, 206, 250);
+}
+
+@media (max-width: 768px) {
+  .slide {
+    flex-basis: 70%;
+  }
+}

@@ -1,0 +1,66 @@
+/* Top navigation bar — copied from old site (layout_navigation2): five equal
+   tabs, each with its own colored underline, that grow a little on hover */
+
+.list {
+  display: flex;
+  justify-content: space-between;
+  gap: 1%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-toshiba), "Courier New", Courier, monospace;
+  font-size: 16px;
+}
+
+.list li {
+  flex: 1;
+  text-align: center;
+  border-radius: 6px 6px 2px 2px;
+  border: 1px solid rgba(130, 180, 255, 0.18);
+  border-bottom: 3px solid var(--accent);
+  background-color: rgba(15, 27, 52, 0.72);
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  transition:
+    transform 0.1s,
+    background-color 0.1s;
+}
+.list li:hover {
+  transform: scale(1.05);
+  background-color: rgba(255, 255, 255, 0.14);
+}
+
+.list li:nth-child(1) {
+  --accent: #8b5742;
+}
+.list li:nth-child(2) {
+  --accent: #6a5acd;
+}
+.list li:nth-child(3) {
+  --accent: #8f9779;
+}
+.list li:nth-child(4) {
+  --accent: #9370db;
+}
+.list li:nth-child(5) {
+  --accent: #8b008b;
+}
+
+.list a {
+  display: block;
+  padding: 7px 4px;
+  color: #faebd7;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+@media (max-width: 768px) {
+  .list {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .list li {
+    flex-basis: 30%;
+  }
+}

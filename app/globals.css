@@ -7,6 +7,9 @@ body {
 
 body {
   margin: 0;
+  /* The header's pizza cube swings past the window edge; on narrow screens
+     that shouldn't add a sideways scrollbar */
+  overflow-x: clip;
   /* Site-wide retro font (overridden for content text) */
   font-family: var(--font-toshiba), "Courier New", Courier, monospace;
 }

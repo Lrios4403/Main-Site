@@ -20,12 +20,34 @@ const toshiba = localFont({
   display: "swap",
 });
 
+// Fonts from the old site: Mario World Pixel Color (header titles),
+// EagleSpCGA (slideshow cards) and Verite 9x14 (home page copy)
+const mario = localFont({
+  src: "../public/fonts/MarioWorldPixelColor.ttf",
+  variable: "--font-mario",
+  display: "swap",
+});
+
+const eagle = localFont({
+  src: "../public/fonts/EagleSpCGA-Alt2-2y.woff",
+  variable: "--font-eagle",
+  display: "swap",
+});
+
+const verite = localFont({
+  src: "../public/fonts/Verite-9x14.woff",
+  variable: "--font-verite",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "Main Website",
-  description: "Main website home page",
+  title: "M4cgyvers Repurposed Mining Rig!",
+  description:
+    "Welcome to my (M4cgyver) website / resume (depending on whos reading). Written in NextJS 13 and NodeJs all within Docker!",
 };
 
 import styles from "@/components/main/styles.module.css";
+import Slideshow from "@/components/slideshow/Slideshow";
 import Window from "@/components/window/Window";
 
 export default function RootLayout({
@@ -36,7 +58,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${toshiba.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${toshiba.variable} ${mario.variable} ${eagle.variable} ${verite.variable} h-full antialiased`}
     >
       <body className="min-h-full">
       
@@ -48,12 +70,33 @@ export default function RootLayout({
         <div className={styles.gridContainer}>
           <div className={styles.grid}>
              
+
             {/* Footer — spans the full bottom row */}
             <div className={styles.footer}>
-            <Window bodyStyle={{ padding: "12px 16px" }}>
-              <p className={styles.footerText}>
-                © 2026 My Site. All rights reserved.
-              </p>
+            <Window bodyStyle={{ padding: "12px 18px" }}>
+              <div className={styles.footerInner}>
+                <div className={styles.footerText}>
+                  <p className={styles.footerName}>Logan Rios (M4cgyver) · 2026</p>
+                  <p className={styles.footerLicense}>
+                    Content released under{" "}
+                    <a
+                      href="https://creativecommons.org/publicdomain/zero/1.0/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      CC0 1.0
+                    </a>
+                    . Credit is appreciated.
+                  </p>
+                </div>
+                <nav className={styles.footerLinks} aria-label="Footer">
+                  {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- the site uses plain <a> links throughout */}
+                  <a href="/">Home</a>
+                  <a href="/blogs/">Blog</a>
+                  <a href="/projects/">Projects</a>
+                  <a href="/contact/">Contact</a>
+                </nav>
+              </div>
             </Window>
             </div>
 
