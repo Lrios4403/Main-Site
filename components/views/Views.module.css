@@ -1,0 +1,42 @@
+/* Today/Total table in the "Views" window */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-toshiba), "Courier New", Courier, monospace;
+  font-size: 15px;
+  color: #c9d6ec;
+}
+
+.table th,
+.table td {
+  padding: 3px 4px;
+  font-weight: 400;
+}
+
+/* Column headings */
+.table thead th {
+  text-align: right;
+  color: #87cefa;
+  border-bottom: 1px solid rgba(130, 180, 255, 0.22);
+}
+
+/* Row headings */
+.table tbody th {
+  text-align: left;
+  color: #add8e6;
+}
+
+/* Counts */
+.table tbody td {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Kept in the layout (display: none can skip the request) but invisible */
+.pixel {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
