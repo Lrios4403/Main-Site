@@ -1,0 +1,94 @@
+/* v86 emulator: a status line with controls above a black VGA screen */
+
+.emulator {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.status {
+  margin: 0;
+  font-family: var(--font-toshiba), "Courier New", Courier, monospace;
+  font-size: 15px;
+  color: #aac6e6;
+}
+.error {
+  color: #ff9b8f;
+}
+
+.buttons {
+  display: flex;
+  gap: 6px;
+}
+
+/* Small Win98-style buttons that match the window title bars */
+.button {
+  padding: 4px 12px;
+  border: 1px solid rgba(130, 180, 255, 0.35);
+  border-radius: 4px;
+  background: linear-gradient(to bottom, #2563eb, #1d4ed8);
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.25),
+    inset -1px -1px 0 rgba(0, 0, 0, 0.35);
+  font-family: var(--font-toshiba), "Courier New", Courier, monospace;
+  font-size: 14px;
+  color: #fff;
+  cursor: pointer;
+}
+.button:hover:not(:disabled) {
+  background: linear-gradient(to bottom, #3b82f6, #2563eb);
+}
+.button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* The VGA screen fills the whole panel width. It's a size container: the
+   pixel font is exactly 0.5em per character, so a font size of 1/40 of the
+   width makes v86's 80 text columns span it edge to edge (and its 25 rows
+   give the panel a 16:10 shape, like 640x400). */
+.screen {
+  container-type: inline-size;
+  overflow: hidden;
+  /* 4px black border inside the blue frame; the text fills the space inside it */
+  padding: 4px;
+  border: 1px solid rgba(130, 180, 255, 0.25);
+  border-radius: 6px;
+  background: #000;
+  cursor: text;
+}
+
+/* Text mode: v86 writes one line per row into this div */
+.text {
+  width: 100%;
+  font-family: var(--font-toshiba), "Courier New", Courier, monospace;
+  font-size: calc(100cqi / 40);
+  line-height: 1em;
+  white-space: pre;
+  color: #aaa;
+}
+
+/* v86 sizes its blinking cursor in fixed pixels for a 16px font; scale it
+   with the text so it stays an underline at the bottom of the cell */
+.text :global(.cursor) {
+  width: 0.5em !important;
+  height: 0.125em !important;
+  margin-top: 0.8em !important;
+}
+
+/* Graphics mode: v86 shows the canvas (and hides the text div) itself.
+   The canvas is stretched to the panel width, keeping its own shape. */
+.canvas {
+  display: none;
+  width: 100% !important;
+  height: auto !important;
+  image-rendering: pixelated;
+}

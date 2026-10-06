@@ -1,0 +1,72 @@
+/* Project cards — copied from old site (projects page.module.css) */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 4px 4px 10px;
+  border-radius: 4px;
+  background-color: rgba(85, 82, 82, 0.55);
+  color: #fff;
+  text-align: center;
+  text-decoration: none;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
+}
+.card:hover {
+  position: relative;
+  z-index: 4;
+  transform: scale(1.1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  background-color: rgba(108, 107, 107, 0.7);
+}
+
+/* The link under the preview: stacks the title and description, and fills
+   the rest of the card so the whole area below the preview is clickable */
+.link {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Stand-in for the lost cover image */
+.cover {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1920 / 1080;
+  margin-bottom: 6px;
+  border-radius: 4px;
+  background: linear-gradient(160deg, #1e3a8a, #0e7490);
+  font-family: var(--font-eagle), "Courier New", Courier, monospace;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.cardTitle {
+  padding: 0 8%;
+  font-family: var(--font-toshiba), "Courier New", Courier, monospace;
+  font-size: 22px;
+  line-height: 1.15;
+}
+
+.cardDesc {
+  margin-top: 4px;
+  padding: 0 12.5%;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #c9d6ec;
+}
