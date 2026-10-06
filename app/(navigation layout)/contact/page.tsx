@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import styles from "@/components/main/styles.module.css";
+import PageHeader from "@/components/page-header/PageHeader";
 import Window from "@/components/window/Window";
 import contact from "./page.module.css";
 
 export const metadata: Metadata = {
-  title: "Contact / Socials",
-  description: "Ways to get in touch with Logan Rios (M4cgyver).",
+  title: "Contact and Socials.",
+  description:
+    "Heres my contact infomation and my socials. If you need or want to reach out for whatever these are the easiest methods!",
 };
 
 type Link = {
@@ -13,62 +15,36 @@ type Link = {
   value: string;
   href: string;
   icon: string;
-  placeholder?: boolean;
 };
 
-// Contact methods. The email is live; swap the "#" hrefs for real profiles.
+// Contact methods: email first, then socials.
 const links: Link[] = [
   {
     label: "Email",
-    value: "lrios@2911tech.com",
-    href: "mailto:lrios@2911tech.com",
+    value: "lrios4403@outlook.com",
+    href: "mailto:lrios4403@outlook.com",
     icon: "@",
   },
   {
-    label: "GitHub",
-    value: "github.com/…",
-    href: "#",
-    icon: "{ }",
-    placeholder: true,
-  },
-  {
-    label: "LinkedIn",
-    value: "linkedin.com/in/…",
-    href: "#",
-    icon: "in",
-    placeholder: true,
-  },
-  {
-    label: "Discord",
-    value: "@…",
-    href: "#",
-    icon: "*",
-    placeholder: true,
+    label: "Fediverse (Pleroma)",
+    value: "fed.m4cgyver.net/users/m4c",
+    href: "http://fed.m4cgyver.net/users/m4c",
+    icon: "⁂",
   },
 ];
 
 export default function Contact() {
-  const hasPlaceholders = links.some((l) => l.placeholder);
-
   return (
     <>
-      <Window
-        title="Title"
-        className={styles.header}
-        bodyStyle={{ padding: "12px 16px 14px" }}
-      >
-        <h2 className={styles.brand}>Contact / Socials</h2>
-        <p className={styles.headerWelcome}>
-          Want to reach out, collaborate, or just say hi? Here&apos;s where to
-          find me.
-        </p>
-      </Window>
+      <PageHeader title="Contact and Socials.">
+        Heres my contact infomation and my socials. If you need or want to
+        reach out for whatever these are the easiest methods!
+      </PageHeader>
 
-      <Window title="Contact / Socials" className={styles.contentArea}>
+      <Window title="Socials" className={styles.contentArea}>
         <p className={contact.intro}>
-          The fastest way to reach me is by email, but I&apos;m around on a few
-          other places too. Feel free to drop a line about projects, retro tech,
-          or games.
+          Fell free to reachout however you want. NOTE: I am extreamly lazy and
+          may not check my socials please be pacient.
         </p>
 
         <ul className={contact.grid}>
@@ -92,14 +68,6 @@ export default function Contact() {
             </li>
           ))}
         </ul>
-
-        {hasPlaceholders && (
-          <p className={contact.note}>
-            → Some links above are placeholders (marked with …). Swap the
-            &quot;#&quot; hrefs in <code>app/(navigation layout)/contact/page.tsx</code>{" "}
-            for your real profiles.
-          </p>
-        )}
       </Window>
     </>
   );
