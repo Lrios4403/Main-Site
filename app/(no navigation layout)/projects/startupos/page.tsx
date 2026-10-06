@@ -1,19 +1,28 @@
 import type { Metadata } from "next";
 import PageHeader from "@/components/page-header/PageHeader";
 import styles from "@/components/main/styles.module.css";
+import JsonLd from "@/components/seo/JsonLd";
 import V86Emulator from "@/components/v86-emulator/V86Emulator";
 import Window from "@/components/window/Window";
+import { breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
 import page from "./page.module.css";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Startup OS Online VM",
   description:
     "Startup OS, a DOS-like x86 assembly operating system based on MikeOS, running in your browser.",
-};
+  path: "/projects/startupos",
+});
 
 export default function StartupOS() {
   return (
     <>
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Projects", path: "/projects" },
+          { name: "Startup OS", path: "/projects/startupos" },
+        ])}
+      />
       <PageHeader title="Startup OS Online VM">
         This is an x86 assembly operating system I&apos;ve been working on, on
         and off, for years. I mainly crunched on it back in 2018, and now I

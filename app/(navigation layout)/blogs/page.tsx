@@ -1,47 +1,24 @@
 import type { Metadata } from "next";
 import styles from "@/components/main/styles.module.css";
 import PageHeader from "@/components/page-header/PageHeader";
+import JsonLd from "@/components/seo/JsonLd";
 import Window from "@/components/window/Window";
+import { formatDate, posts } from "@/lib/posts";
+import { breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
 import list from "./page.module.css";
 
-export const metadata: Metadata = {
-  title: "M4cgyvers Bountifull Blog Posts.",
+export const metadata: Metadata = pageMetadata({
+  title: "Blog Posts",
   description:
     "Here are a list of all of the thoughts or comments I have about anything happening on the Internet (or internet).",
-};
+  path: "/blogs",
+});
 
-type Post = {
-  slug: string;
-  title: string;
-  description: string;
-  date: string;
-  status?: string;
-  tags: string[];
-};
-
-// The site's blog posts. Add new entries here as they're written.
-const posts: Post[] = [
-  {
-    slug: "nextjs-ordered-table-layout",
-    title: "NextJS Ordered Table Layout",
-    description:
-      "Using CSS grid areas to arrange components across layouts and pages in the Next.js App Router, so widgets from different files always land in the same spot. Includes a live HTML demo and a full example project.",
-    date: "2026",
-    tags: ["NextJS", "CSS Grid", "Layouts"],
-  },
-  {
-    slug: "llms-on-an-intel-npu",
-    title: "LLMs on an Intel NPU",
-    description:
-      "How I got Qwen3 8B running on my laptop's Intel AI Boost NPU with OpenVINO Model Server (or NoLlama), then hooked it into OpenWork and Claude Code, so small tasks stop burning Claude tokens and the GPU stays free.",
-    date: "2026",
-    tags: ["OpenVINO", "Intel NPU", "Qwen3", "Claude Code"],
-  },
-];
-
+// The posts themselves are listed in lib/posts.ts
 export default function BlogList() {
   return (
     <>
+      <JsonLd data={breadcrumbJsonLd([{ name: "Blog", path: "/blogs" }])} />
       <PageHeader title="M4cgyvers Bountifull Blog Posts.">
         Here are a list of all of the thoughts or comments I have about
         anything happening on the Internet (or internet).
@@ -63,7 +40,9 @@ export default function BlogList() {
                   </div>
                   <p className={list.cardDesc}>{post.description}</p>
                   <div className={list.cardMeta}>
-                    <span className={list.date}>{post.date}</span>
+                    <time className={list.date} dateTime={post.published}>
+                      {formatDate(post.published)}
+                    </time>
                     <span className={list.tags}>
                       {post.tags.map((tag) => (
                         <span key={tag} className={list.tag}>

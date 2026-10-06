@@ -1,14 +1,17 @@
 import type { Metadata } from "next";
 import styles from "@/components/main/styles.module.css";
 import PageHeader from "@/components/page-header/PageHeader";
+import JsonLd from "@/components/seo/JsonLd";
 import Window from "@/components/window/Window";
+import { breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
 import contact from "./page.module.css";
 
-export const metadata: Metadata = {
-  title: "Contact and Socials.",
+export const metadata: Metadata = pageMetadata({
+  title: "Contact and Socials",
   description:
     "Heres my contact infomation and my socials. If you need or want to reach out for whatever these are the easiest methods!",
-};
+  path: "/contact",
+});
 
 type Link = {
   label: string;
@@ -36,6 +39,7 @@ const links: Link[] = [
 export default function Contact() {
   return (
     <>
+      <JsonLd data={breadcrumbJsonLd([{ name: "Contact", path: "/contact" }])} />
       <PageHeader title="Contact and Socials.">
         Heres my contact infomation and my socials. If you need or want to
         reach out for whatever these are the easiest methods!

@@ -1,6 +1,11 @@
+import type { Metadata } from "next";
 import PageHeader from "@/components/page-header/PageHeader";
 import styles from "@/components/main/styles.module.css";
+import PostSidebar, { type Resource } from "@/components/post-sidebar/PostSidebar";
+import JsonLd from "@/components/seo/JsonLd";
 import Window from "@/components/window/Window";
+import { getPost } from "@/lib/posts";
+import { postJsonLd, postMetadata } from "@/lib/seo";
 import post from "./page.module.css";
 
 import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -27,16 +32,51 @@ import {
 } from "./blob";
 import { CodeBlock } from "./codeblock";
 
+// Title, description, dates and tags live in lib/posts.ts
+const info = getPost("nextjs-ordered-table-layout");
+
+export const metadata: Metadata = postMetadata(info);
+
+// The example project, its demos, and the docs behind the technique
+const resources: Resource[] = [
+  {
+    label: "Example Project",
+    href: "https://github.com/Lrios4403/NextJS-Ordered-Table-Layout",
+    note: "The full Next.js project on GitHub.",
+  },
+  {
+    label: "Live Demo",
+    href: "https://githubbox.com/Lrios4403/NextJS-Ordered-Table-Layout",
+    note: "The project running on CodeSandbox.",
+  },
+  {
+    label: "Basic HTML Example",
+    href: "https://codesandbox.io/p/sandbox/rfz7jw",
+    note: "The plain HTML version.",
+  },
+  {
+    label: "grid-template-areas",
+    href: "https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/grid-template-areas",
+    note: "MDN reference.",
+  },
+  {
+    label: "Next.js Layouts and Pages",
+    href: "https://nextjs.org/docs/app/getting-started/layouts-and-pages",
+    note: "Next.js docs.",
+  },
+];
+
 export default function BlogNextJSOrderedTableLayout() {
   return (
     <>
+      <JsonLd data={postJsonLd(info)} />
       <PageHeader title="NextJS Ordered Table Layout">
         This method uses CSS grid areas to arrange components across layouts and
         pages in the Next.js App Router.
       </PageHeader>
 
-      {/* Left-hand navigation: in-page table of contents */}
-      <div className={`${styles.navLhs} ${post.toc}`}>
+      {/* Left-hand column: post info, resources and the table of contents */}
+      <PostSidebar post={info} resources={resources}>
         <Window title="Navigation" bodyStyle={{ padding: 8, paddingLeft: 12 }}>
           <ul className={styles.list}>
             <li>
@@ -67,7 +107,7 @@ export default function BlogNextJSOrderedTableLayout() {
             </li>
           </ul>
         </Window>
-      </div>
+      </PostSidebar>
 
       <Window
         title="Setup"

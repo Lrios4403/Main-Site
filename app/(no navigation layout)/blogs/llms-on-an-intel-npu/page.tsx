@@ -1,11 +1,46 @@
+import type { Metadata } from "next";
 import PageHeader from "@/components/page-header/PageHeader";
 import styles from "@/components/main/styles.module.css";
+import PostSidebar, { type Resource } from "@/components/post-sidebar/PostSidebar";
+import JsonLd from "@/components/seo/JsonLd";
 import Window from "@/components/window/Window";
+import { getPost } from "@/lib/posts";
+import { postJsonLd, postMetadata } from "@/lib/seo";
 import post from "./page.module.css";
+
+// Title, description, dates and tags live in lib/posts.ts
+const info = getPost("llms-on-an-intel-npu");
+
+export const metadata: Metadata = postMetadata(info);
+
+// Everything the post links to or installs
+const resources: Resource[] = [
+  {
+    label: "Intel NPU Driver",
+    href: "https://www.intel.com/content/www/us/en/download/794734/intel-npu-driver-windows.html",
+    note: "Windows driver for the AI Boost NPU.",
+  },
+  {
+    label: "OpenVINO Model Server",
+    href: "https://github.com/openvinotoolkit/model_server",
+    note: "Intel's model server, runs the model on the NPU.",
+  },
+  {
+    label: "Qwen3 8B (OpenVINO)",
+    href: "https://huggingface.co/OpenVINO/Qwen3-8B-int4-cw-ov",
+    note: "The int4 model the post runs.",
+  },
+  {
+    label: "NoLlama",
+    href: "https://github.com/aweussom/NoLlama",
+    note: "A lighter alternative to OVMS.",
+  },
+];
 
 export default function BlogOpenVINOModelServerSetup() {
   return (
     <>
+      <JsonLd data={postJsonLd(info)} />
       <PageHeader title="LLMs on an Intel NPU">
         How I got Qwen3 8B running on my laptop&apos;s Intel AI Boost NPU
         with OpenVINO Model Server (or NoLlama), then hooked it into OpenWork
@@ -13,8 +48,8 @@ export default function BlogOpenVINOModelServerSetup() {
         stays free.
       </PageHeader>
 
-      {/* Left-hand navigation: in-page table of contents */}
-      <div className={`${styles.navLhs} ${post.toc}`}>
+      {/* Left-hand column: post info, resources and the table of contents */}
+      <PostSidebar post={info} resources={resources}>
         <Window title="Navigation" bodyStyle={{ padding: 8, paddingLeft: 12 }}>
           <ul className={styles.list}>
             <li>
@@ -47,7 +82,7 @@ export default function BlogOpenVINOModelServerSetup() {
             </li>
           </ul>
         </Window>
-      </div>
+      </PostSidebar>
 
       <Window
         title="Setup"

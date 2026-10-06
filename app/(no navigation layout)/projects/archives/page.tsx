@@ -1,20 +1,29 @@
 import type { Metadata } from "next";
 import PageHeader from "@/components/page-header/PageHeader";
 import styles from "@/components/main/styles.module.css";
+import JsonLd from "@/components/seo/JsonLd";
 import Window from "@/components/window/Window";
+import { breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
 import post from "./page.module.css";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "M4cgyvers Archives",
   description:
     "How archives.m4cgyver.net works: a one-person web archive that indexes WARC files with Bun and PostgreSQL, serves them through a WireGuard tunnel, and replays them online or right in your browser.",
-};
+  path: "/projects/archives",
+});
 
 const SITE = "https://archives.m4cgyver.net";
 
 export default function ProjectArchives() {
   return (
     <>
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Projects", path: "/projects" },
+          { name: "Archives", path: "/projects/archives" },
+        ])}
+      />
       <PageHeader title="M4cgyvers Archives">
         How archives.m4cgyver.net works: a one-person web archive that indexes
         WARC files with Bun and PostgreSQL, serves them through a WireGuard

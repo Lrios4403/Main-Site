@@ -1,6 +1,7 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import localFont from "next/font/local";
+import { site } from "@/lib/seo";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -40,10 +41,53 @@ const verite = localFont({
   display: "swap",
 });
 
+// Site-wide defaults. Pages set their own title, description, canonical URL
+// and Open Graph block through pageMetadata() in lib/seo.ts; the template
+// adds the site name to each page's title. The favicon, icons and share image
+// come from the files in app/ (favicon.ico, icon.png, apple-icon.png,
+// opengraph-image.tsx).
 export const metadata: Metadata = {
-  title: "M4cgyvers Repurposed Mining Rig!",
-  description:
-    "Welcome to my (M4cgyver) website / resume (depending on whos reading). Written in NextJS 13 and NodeJs all within Docker!",
+  metadataBase: new URL(site.url),
+  title: {
+    default: site.name,
+    template: "%s | M4cgyver",
+  },
+  description: site.description,
+  applicationName: site.name,
+  authors: [{ name: site.author.name, url: site.url }],
+  creator: site.author.name,
+  publisher: site.author.name,
+  openGraph: {
+    type: "website",
+    siteName: site.name,
+    locale: site.locale,
+    url: "/",
+    title: site.name,
+    description: site.description,
+  },
+  twitter: {
+    card: "summary_large_image",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0f1b34",
+  colorScheme: "dark",
 };
 
 import styles from "@/components/main/styles.module.css";

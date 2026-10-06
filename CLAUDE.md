@@ -57,13 +57,28 @@ bunx eslint app components lib   # lint (see below for why not `bun run lint`)
 
 All content is hardcoded:
 
-- The blog index is a `posts` array in `app/(navigation layout)/blogs/page.tsx`.
-- Each post is its own hand-written static route at `app/(no navigation layout)/blogs/<slug>/page.tsx`. To add a post, add an entry to the array and create the route folder.
-- A post's content area is a plain `<div>` carrying both `styles.contentArea` and the post's `.prose` class. It holds one `Window` per section, and the `id`s on those windows and on sub-headings are the targets of the nav's `#anchor` links. `<span>`s are used as paragraphs; `.prose` makes them block-level.
+- Blog posts are listed in `lib/posts.ts` (slug, title, description, `published`/`updated` dates, tags). The blog index, the sitemap, each post's metadata and its JSON-LD all read from it.
+- Each post is its own hand-written static route at `app/(no navigation layout)/blogs/<slug>/page.tsx`. To add a post, add an entry to `lib/posts.ts` and create the route folder. The page calls `getPost(slug)`, exports `postMetadata(info)`, renders `<JsonLd data={postJsonLd(info)} />`, and wraps its table of contents in `components/post-sidebar/PostSidebar.tsx`. The sidebar adds the "Post Info" window (author, published and last-updated dates) and a "Resources" window of the post's external links, and keeps the table of contents sticky.
+- When a post's content changes, set its `updated` date. The visible "Last updated" date and the JSON-LD `dateModified` both come from that field.
 - The slideshow cards are a `slides` array in `components/slideshow/Slideshow.tsx` (the image is optional), and the 88x31 buttons are a `frens` array in `components/sidebar/Sidebar.tsx`. Card text is sized in container-query units (`cqi`), so it scales with the card instead of getting cut off.
-- Most pages export `metadata`. The Azure post doesn't, so it inherits the root title.
-- Internal links are plain `<a>` tags with trailing slashes (`/blogs/`, `/contact/`). `@next/next/no-html-link-for-pages` flags a literal `href="/"`, so the Homepage link in `Sidebar.tsx` carries an eslint-disable comment.
-- The nav, slideshow and project cards link to routes that don't exist yet: `/projects/archives/`, `/projects/startupos/` and `/blogs/nextjsapp-ordered-layout/` (only its summary survived). They land on the 404 page (`app/not-found.tsx`). The old site's friend pages (Bic, Casmier, Cookie, Neo) were left out on purpose.
+- Internal links are plain `<a>` tags with trailing slashes (`/blogs/`, `/contact/`). `@next/next/no-html-link-for-pages` flags a literal `href="/"`, so links to the home page carry an eslint-disable comment.
+- Unknown routes land on the 404 page (`app/not-found.tsx`). The old site's friend pages (Bic, Casmier, Cookie, Neo) were left out on purpose.
+
+## SEO
+
+- `lib/seo.ts` holds the site settings, including the canonical domain `https://m4cgyver.net`. It's used as `metadataBase` and as the base for every absolute URL.
+- The root layout sets the defaults and a title template, `%s | M4cgyver`. Every page builds its metadata with `pageMetadata({ title, description, path })`, which sets the canonical URL and a full Open Graph block. Omit `title` to get the bare site name, as the home page does.
+- Metadata merges shallowly: a page's `openGraph` replaces the root's completely. That's why `pageMetadata` lists `/opengraph-image` itself instead of relying on the file convention.
+- Twitter metadata isn't set per page. Next fills the twitter title, description and image in from Open Graph, and the root sets `summary_large_image`.
+- JSON-LD is rendered with `components/seo/JsonLd.tsx`:
+  - the home page renders WebSite and Person (`homeJsonLd`);
+  - every other page renders a `breadcrumbJsonLd` trail;
+  - posts render BlogPosting plus breadcrumbs (`postJsonLd`).
+- `app/sitemap.ts` lists the routes and pulls the posts from `lib/posts.ts`. Add new non-post pages there by hand. `app/robots.ts` allows everything except `/api/`.
+- Icons:
+  - `app/favicon.ico`, `icon.png` and `apple-icon.png` are generated from `assets/floppy.png`, a 64x64 floppy disk.
+  - The `.ico` holds smooth downscales; nearest-neighbor turns the 16 and 32px sizes into noise. The PNGs are crisp nearest-neighbor upscales.
+- `app/opengraph-image.tsx` renders the 1200x630 share image: the "Title" window, `assets/floppy-384.png` on the left and the site name in the Toshiba font on the right. It reads its files with `readFile` from `process.cwd()`.
 
 ## Design sync (claude.ai/design)
 

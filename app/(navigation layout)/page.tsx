@@ -1,13 +1,23 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import introPhoto from "@/public/main/PXL_20230322_080050245.jpeg";
 import styles from "@/components/main/styles.module.css";
 import PageHeader from "@/components/page-header/PageHeader";
+import JsonLd from "@/components/seo/JsonLd";
 import Window from "@/components/window/Window";
+import { homeJsonLd, pageMetadata, site } from "@/lib/seo";
 import home from "./page.module.css";
+
+// No title: the home page uses the site name on its own
+export const metadata: Metadata = pageMetadata({
+  description: site.description,
+  path: "/",
+});
 
 export default function Home() {
   return (
     <>
+      <JsonLd data={homeJsonLd()} />
       <PageHeader title="M4cgyvers Repurposed Mining Rig!">
         Welcome to my (M4cgyver) website / resume (depending on whos reading).
         Written in NextJS 13 and NodeJs all within Docker!

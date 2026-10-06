@@ -2,14 +2,17 @@ import type { Metadata } from "next";
 import type { CSSProperties } from "react";
 import styles from "@/components/main/styles.module.css";
 import PageHeader from "@/components/page-header/PageHeader";
+import JsonLd from "@/components/seo/JsonLd";
 import Window from "@/components/window/Window";
+import { breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
 import projects from "./page.module.css";
 
-export const metadata: Metadata = {
-  title: "Projects and Workloads.",
+export const metadata: Metadata = pageMetadata({
+  title: "Projects and Workloads",
   description:
     "Here are some projects I have been working on. Feel free to check them out. JavaScript is required for some projects!",
-};
+  path: "/projects",
+});
 
 type Project = {
   href: string;
@@ -46,6 +49,7 @@ const cards: Project[] = [
 export default function Projects() {
   return (
     <>
+      <JsonLd data={breadcrumbJsonLd([{ name: "Projects", path: "/projects" }])} />
       <PageHeader title="Projects and Workloads.">
         Here are some projects I have been working on. Feel free to check them
         out. JavaScript is required for some projects!

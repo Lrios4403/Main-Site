@@ -194,16 +194,7 @@ div.post {
   margin-top: 1.5rem;
 }
 
-/* Table of contents stays in view while scrolling the long post */
-.toc {
-  position: sticky;
-  top: 1rem;
-}
-
 @media (max-width: 768px) {
-  .toc {
-    position: static;
-  }
   .post > :last-child {
     padding: 1.1rem 1.1rem 1.5rem;
   }

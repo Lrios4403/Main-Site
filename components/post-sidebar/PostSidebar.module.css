@@ -1,0 +1,63 @@
+/* A blog post's left column: Post Info, Resources, then the table of contents.
+   The column stretches the full height of its grid row so the table of
+   contents has room to stick while the post scrolls. */
+.column {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Table of contents stays in view while scrolling the long post */
+.toc {
+  position: sticky;
+  top: 1rem;
+}
+
+/* Same look as the StartupOS Credits list: the value, then a small label */
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-toshiba), "Courier New", Courier, monospace;
+}
+.list li {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 12px;
+}
+.list li:last-child {
+  margin-bottom: 0;
+}
+.list a,
+.value {
+  font-size: 17px;
+  line-height: 1.2;
+  color: #87cefa;
+  overflow-wrap: anywhere;
+}
+.list a {
+  text-decoration: underline;
+  text-decoration-color: rgba(135, 206, 250, 0.4);
+  text-underline-offset: 3px;
+}
+.list a:hover {
+  color: #b8e4ff;
+}
+.label {
+  font-size: 13px;
+  font-style: italic;
+  color: #c9d6ec;
+}
+.note {
+  margin-top: 2px;
+  font-size: 12px;
+  line-height: 1.35;
+  color: #93a4c4;
+}
+
+@media (max-width: 768px) {
+  .toc {
+    position: static;
+  }
+}
