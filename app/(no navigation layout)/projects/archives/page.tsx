@@ -1,10 +1,13 @@
+import PostSidebar from "@/components/post-sidebar/PostSidebar";
+import { CodeBlock } from "@/components/article/CodeBlock";
 import type { Metadata } from "next";
-import PageHeader from "@/components/page-header/PageHeader";
-import styles from "@/components/main/styles.module.css";
+import ArticleHeader from "@/components/article/ArticleHeader";
+import ArticleLayout from "@/components/article/ArticleLayout";
+import Contents from "@/components/article/Contents";
+import DemoPanel from "@/components/article/DemoPanel";
 import JsonLd from "@/components/seo/JsonLd";
-import Window from "@/components/window/Window";
 import { breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
-import post from "./page.module.css";
+import post from "@/components/article/Prose.module.css";
 
 export const metadata: Metadata = pageMetadata({
   title: "M4cgyvers Archives",
@@ -24,72 +27,15 @@ export default function ProjectArchives() {
           { name: "Archives", path: "/projects/archives" },
         ])}
       />
-      <PageHeader title="M4cgyvers Archives">
-        How archives.m4cgyver.net works: a one-person web archive that indexes
-        WARC files with Bun and PostgreSQL, serves them through a WireGuard
-        tunnel, and replays them online or right in your browser.
-      </PageHeader>
+      <ArticleHeader title="Archives" description="Preserving the web with WARC files, searchable captures, and browser-based replay." />
 
       {/* Left-hand navigation: in-page table of contents */}
-      <div className={`${styles.navLhs} ${post.toc}`}>
-        <Window title="Navigation" bodyStyle={{ padding: 8, paddingLeft: 12 }}> 
-          <ul className={styles.list}>
-            <li>
-              <a href="#what-it-is">What It Is</a>
-            </li>
-            <li>
-              <a href="#the-big-picture">The Big Picture</a>
-            </li>
-            <li>
-              <a href="#collecting-warcs">Collecting WARCs</a>
-            </li>
-            <li>
-              <a href="#backend">Backend Stack</a>
-              <ul className={styles.list}>
-                <li>
-                  <a href="#bun-api">The Bun API</a>
-                </li>
-                <li>
-                  <a href="#postgresql">PostgreSQL</a>
-                </li>
-                <li>
-                  <a href="#wireguard">The WireGuard Tunnel</a>
-                </li>
-              </ul>
-            </li>
-            <li>
-              <a href="#frontend">Frontend</a>
-            </li>
-            <li>
-              <a href="#parser">The Parser</a>
-            </li>
-            <li>
-              <a href="#online-replay">Replaying Online</a>
-            </li>
-            <li>
-              <a href="#offline-viewer">The Offline Viewer</a>
-            </li>
-            <li>
-              <a href="#downloads">Downloads</a>
-            </li>
-            <li>
-              <a href="#limits">Limits</a>
-            </li>
-          </ul>
-        </Window>
-      </div>
+      <PostSidebar resources={[{label:"Live archive",href:SITE,note:"Search and replay saved web captures."},{label:"Offline WARC viewer",href:`${SITE}/warcs/offline`,note:"Open your own WARC files in the browser."}]}><Contents sections={[{"id": "what-it-is", "title": "What It Is", "level": 2}, {"id": "the-big-picture", "title": "The Big Picture", "level": 2}, {"id": "collecting-warcs", "title": "Collecting WARCs", "level": 2}, {"id": "backend", "title": "Backend Stack", "level": 2}, {"id": "bun-api", "title": "The Bun API", "level": 3}, {"id": "postgresql", "title": "PostgreSQL: An Index, Not a Copy", "level": 3}, {"id": "wireguard", "title": "The WireGuard Tunnel", "level": 3}, {"id": "frontend", "title": "Frontend", "level": 2}, {"id": "parser", "title": "The Parser", "level": 2}, {"id": "online-replay", "title": "Replaying a Capture Online", "level": 2}, {"id": "offline-viewer", "title": "The Offline Viewer", "level": 2}, {"id": "downloads", "title": "Downloads", "level": 2}, {"id": "limits", "title": "Limits", "level": 2}]} /></PostSidebar>
 
-      <Window
-        title="Archives"
-        className={`${styles.contentArea} ${post.post}`}
-      >
-        <div>
-          <a href={SITE} target="_blank" rel="noopener noreferrer">https://archives.m4cgyver.net</a> is the live archive.
-          <iframe src="https://archives.m4cgyver.net/" className={post.tocFrame} style={{width: '100%', aspectRatio: '16 / 9'}}/>
-          <br/>
-        </div>
+      <ArticleLayout title="Project notes" summary="A personal web archive built around WARC files, a searchable PostgreSQL index, and browser-based replay. This notebook explains the architecture and its limitations.">
+        <p><a href={SITE} target="_blank" rel="noopener noreferrer">Open the live archive ↗</a></p><DemoPanel title="Preview the live archive" href={SITE}><iframe src={SITE} title="Live archive preview" loading="lazy" style={{aspectRatio:"16 / 9"}} /></DemoPanel>
 
-        <h1 id="what-it-is">What It Is</h1>
+        <h2 id="what-it-is">What It Is</h2>
         <span className={post.notification}>
           The archive lives at{" "}
           <a href={SITE} target="_blank" rel="noopener noreferrer">
@@ -138,14 +84,14 @@ export default function ProjectArchives() {
           viewer rebuilds pages without a server.
         </p>
 
-        <h1 id="the-big-picture">The Big Picture</h1>
+        <h2 id="the-big-picture">The Big Picture</h2>
         <p>
           The archive is split across two machines. The heavy half (the WARC
           files, the database, the parser and the API) runs in Docker on a
           Linux machine at home. The website runs on a rented VPS. A WireGuard
           tunnel joins them.
         </p>
-        <pre>{`  wget --warc-file           (crawl a site)
+        <CodeBlock kind="command" label="Capture tools" code={`  wget --warc-file           (crawl a site)
           |
           v
      WARC files on disk  <----------------------+
@@ -166,14 +112,14 @@ export default function ProjectArchives() {
           |
           v
      Your browser
-     (the offline viewer runs the same parser, in Web Workers)`}</pre>
+     (the offline viewer runs the same parser, in Web Workers)`} />
         <p>
           The key idea is that the database never stores the archived pages.
           It stores <em>where</em> each response sits inside its WARC file.
           When you open a capture, the API reads exactly those bytes off disk.
         </p>
 
-        <h1 id="collecting-warcs">Collecting WARCs</h1>
+        <h2 id="collecting-warcs">Collecting WARCs</h2>
         <p>
           I crawl sites with <code>wget --warc-file</code>, which saves every
           request and response it makes into a WARC file. A WARC is a long
@@ -181,7 +127,7 @@ export default function ProjectArchives() {
           record holds the raw HTTP response exactly as the server sent it,
           headers and all:
         </p>
-        <pre>{`WARC/1.1
+        <CodeBlock kind="output" label="WARC record" code={`WARC/1.1
 WARC-Type: response
 WARC-Target-URI: http://example.com/
 WARC-Date: 2009-06-14T03:21:07Z
@@ -192,21 +138,21 @@ Content-Length: 1270
 HTTP/1.1 200 OK
 Content-Type: text/html
 
-<html> ...the page, byte for byte... </html>`}</pre>
+<html> ...the page, byte for byte... </html>`} />
         <p>
           Because the bytes are untouched, a WARC is a faithful record of what
           the site actually served, including its mistakes. That last part
           matters a lot for the parser.
         </p>
 
-        <h1 id="backend">Backend Stack</h1>
+        <h2 id="backend">Backend Stack</h2>
         <p>
           The backend is a small Docker Compose stack: PostgreSQL 18, a Bun
           API, a Bun parser and a WireGuard client. The WARC files live on
           storage on my home network and are mounted into both Bun containers.
         </p>
 
-        <h2 id="bun-api">The Bun API</h2>
+        <h3 id="bun-api">The Bun API</h3>
         <p>
           The API is a single TypeScript process on Bun, with no web framework.
           It uses Bun&apos;s built-in HTTP server (<code>Bun.serve</code> with a
@@ -246,7 +192,7 @@ Content-Type: text/html
           </li>
         </ul>
 
-        <h2 id="postgresql">PostgreSQL: An Index, Not a Copy</h2>
+        <h3 id="postgresql">PostgreSQL: An Index, Not a Copy</h3>
         <p>
           Every archived response becomes a row that says which file it came
           from, which URL it was, when it was captured, its status and headers,
@@ -259,7 +205,7 @@ Content-Type: text/html
           Keeping only pointers keeps the database a fraction of the size of the
           archive, and the original WARCs stay the single source of truth.
         </p>
-        <h3>Search</h3>
+        <h4>Search</h4>
         <p>
           Search is a case-insensitive substring match on URLs, backed by a
           trigram index (<code>pg_trgm</code>). With millions of URLs, making it
@@ -310,7 +256,7 @@ Content-Type: text/html
             </p>
           </li>
         </ul>
-        <h3>Nearest Capture in Time</h3>
+        <h4>Nearest Capture in Time</h4>
         <p>
           A lot of the archive runs on one question: &quot;what&apos;s the
           capture of this URL closest to this date?&quot; It&apos;s answered
@@ -318,7 +264,7 @@ Content-Type: text/html
           the closest after it, keeping whichever is nearer.
         </p>
 
-        <h2 id="wireguard">The WireGuard Tunnel</h2>
+        <h3 id="wireguard">The WireGuard Tunnel</h3>
         <p>
           The backend sits on my home network, and I didn&apos;t want to open
           ports on my router for it. Instead, a WireGuard client container on
@@ -334,7 +280,7 @@ Content-Type: text/html
           the normal Compose network. The parser doesn&apos;t need the tunnel at
           all, so it stays outside it.
         </p>
-        <pre>{`Home machine (Docker)
+        <CodeBlock kind="diagram" label="Network architecture" code={`Home machine (Docker)
 +--------------------------------------+
 | PostgreSQL 18                        |
 | Bun parser                           |
@@ -349,13 +295,13 @@ Content-Type: text/html
 |   WireGuard                          |
 |   nginx --> archive API: Bun         |
 |         --> everything else: Next.js |
-+--------------------------------------+`}</pre>
++--------------------------------------+`} />
         <p>
           On the VPS, nginx sends archive API requests across the tunnel
           straight to Bun, and everything else to the Next.js frontend.
         </p>
 
-        <h1 id="frontend">Frontend</h1>
+        <h2 id="frontend">Frontend</h2>
         <p>
           The website is a Next.js 16 app with a Windows 95 look: gradient
           title bars, beveled windows and desktop icons. It runs in Docker on
@@ -413,13 +359,13 @@ Content-Type: text/html
           </li>
         </ul>
 
-        <h1 id="parser">The Parser</h1>
+        <h2 id="parser">The Parser</h2>
         <p>
           The parser is the heart of the project. It walks the WARC folder,
           reads every record, and writes a row to PostgreSQL for every HTTP
           response it finds.
         </p>
-        <h3>mwarc: One Decoder, Two Runtimes</h3>
+        <h4>mwarc: One Decoder, Two Runtimes</h4>
         <p>
           The WARC decoder, <code>mwarc</code>, is hand-written and has zero
           imports. It never touches the file system itself. Every byte reaches
@@ -435,7 +381,7 @@ Content-Type: text/html
           and jumps over it. Indexing a multi-gigabyte WARC mostly means reading
           headers.
         </p>
-        <h3>Surviving Real-World WARCs</h3>
+        <h4>Surviving Real-World WARCs</h4>
         <p>
           Real archives are messy, and most of <code>mwarc</code> exists
           because some real file broke an earlier version:
@@ -468,7 +414,7 @@ Content-Type: text/html
             fool it.
           </li>
         </ul>
-        <h3>Resumable Ingest</h3>
+        <h4>Resumable Ingest</h4>
         <p>
           Parsing the whole collection takes a long time, so the parser is
           built to stop and pick up where it left off:
@@ -507,7 +453,7 @@ Content-Type: text/html
           </li>
         </ol>
 
-        <h1 id="online-replay">Replaying a Capture Online</h1>
+        <h2 id="online-replay">Replaying a Capture Online</h2>
         <p>
           When you open a capture, the frontend shows it in a sandboxed frame
           that loads from the API. The API looks up the capture&apos;s pointer
@@ -544,7 +490,7 @@ Content-Type: text/html
           </li>
         </ul>
 
-        <h1 id="offline-viewer">The Offline Viewer</h1>
+        <h2 id="offline-viewer">The Offline Viewer</h2>
         <span className={post.notification}>
           Try it at{" "}
           <a href={`${SITE}/warcs/offline`} target="_blank" rel="noopener noreferrer">
@@ -567,7 +513,7 @@ Content-Type: text/html
           It&apos;s a one-person project with no accounts and no users to sell,
           so there&apos;s no reason for your files to touch my server.
         </p>
-        <h3>Parsing in the Browser</h3>
+        <h4>Parsing in the Browser</h4>
         <p>
           The Bun backend bundles the same parser it uses for indexing into a
           single script for Web Workers, and the viewer starts a pool of
@@ -615,7 +561,7 @@ Content-Type: text/html
           captured URL, grouped by site, along with each URL&apos;s capture
           timeline.
         </p>
-        <h3>Rebuilding Pages</h3>
+        <h4>Rebuilding Pages</h4>
         <p>When you open a page, a dedicated view worker rebuilds it:</p>
         <ol>
           <li>
@@ -663,7 +609,7 @@ Content-Type: text/html
           opened it, it can start again without a connection.
         </p>
 
-        <h1 id="downloads">Downloads</h1>
+        <h2 id="downloads">Downloads</h2>
         <p>
           Both the archive and the offline viewer can save captures as a zip,
           and they share one zip writer:
@@ -704,7 +650,7 @@ Content-Type: text/html
           </li>
         </ul>
 
-        <h1 id="limits">Limits</h1>
+        <h2 id="limits">Limits</h2>
         <p>
           The archive is a reconstruction, not a time machine. Some honest
           limits:
@@ -731,7 +677,7 @@ Content-Type: text/html
             the backend, so a first-time visitor needs the archive to be online.
           </li>
         </ul>
-      </Window>
+      </ArticleLayout>
     </>
   );
 }
