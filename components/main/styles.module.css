@@ -1,5 +1,26 @@
 /* Main page (index) styles — CSS Module (locally scoped) */
 
+/* Reusable grid texture over a component's own background. Reserves ::before.
+   Override --grid-size and --grid-line-color locally to tune the pattern. */
+.gridBackground {
+  position: relative;
+  isolation: isolate;
+}
+
+.gridBackground::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    radial-gradient(ellipse at 95% 0%, rgba(78, 166, 201, 0.18), transparent 60%),
+    linear-gradient(0deg, var(--grid-line-color, rgba(124, 178, 211, 0.035)) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line-color, rgba(124, 178, 211, 0.035)) 1px, transparent 1px);
+  background-size: auto, var(--grid-size, 32px) var(--grid-size, 32px), var(--grid-size, 32px) var(--grid-size, 32px);
+  pointer-events: none;
+}
+
 .mainWrapper {
   position: relative;
   display: flex;
@@ -100,7 +121,6 @@
   grid-template-areas:
     "header header header"
     "topnav topnav topnav"
-    "slideshow slideshow slideshow"
     "navigation-lhs content content"
     "footer footer footer";
 }
@@ -152,7 +172,6 @@
     grid-template-areas:
       "header"
       "topnav"
-      "slideshow"
       "navigation-lhs"
       "content"
       "footer";
