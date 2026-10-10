@@ -8,6 +8,8 @@ type WindowProps = {
   className?: string;
   style?: CSSProperties;
   bodyStyle?: CSSProperties;
+  collapsible?: boolean;
+  defaultOpen?: boolean;
 };
 
 export default function Window({
@@ -17,7 +19,20 @@ export default function Window({
   className,
   style,
   bodyStyle,
+  collapsible = false,
+  defaultOpen = true,
 }: WindowProps) {
+  if (collapsible && title != null) {
+    return (
+      <details id={id} open={defaultOpen} className={[styles.window, styles.collapsible, className].filter(Boolean).join(" ")} style={style}>
+        <summary className={styles.titleBar}>
+          <span className={styles.toggle} aria-hidden="true">&gt;</span>
+          <span className={styles.titleText}>{title}</span>
+        </summary>
+        <div className={styles.body} style={bodyStyle}>{children}</div>
+      </details>
+    );
+  }
   return (
     <div
       id={id}
