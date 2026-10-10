@@ -13,24 +13,28 @@ export type Post = {
   updated?: string;
   status?: string;
   tags: string[];
+  readingMinutes: number;
 };
 
 export const posts: Post[] = [
   {
     slug: "nextjs-ordered-table-layout",
+    readingMinutes: 9,
     title: "NextJS Ordered Table Layout",
     description:
       "Using CSS grid areas to arrange components across layouts and pages in the Next.js App Router, so widgets from different files always land in the same spot. Includes a live HTML demo and a full example project.",
     published: "2026-10-06",
+    updated: "2026-10-10",
     tags: ["NextJS", "CSS Grid", "Layouts"],
   },
   {
     slug: "llms-on-an-intel-npu",
+    readingMinutes: 7,
     title: "LLMs on an Intel NPU",
     description:
       "How I got Qwen3 8B running on my laptop's Intel AI Boost NPU with OpenVINO Model Server (or NoLlama), then hooked it into OpenWork and Claude Code, so small tasks stop burning Claude tokens and the GPU stays free.",
     published: "2026-09-30",
-    updated: "2026-10-05",
+    updated: "2026-10-10",
     tags: ["OpenVINO", "Intel NPU", "Qwen3", "Claude Code"],
   },
 ];
