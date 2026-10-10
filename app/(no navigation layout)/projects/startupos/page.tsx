@@ -1,5 +1,8 @@
+import PostSidebar from "@/components/post-sidebar/PostSidebar";
+import Contents from "@/components/article/Contents";
 import type { Metadata } from "next";
-import PageHeader from "@/components/page-header/PageHeader";
+import ArticleHeader from "@/components/article/ArticleHeader";
+import ArticleLayout from "@/components/article/ArticleLayout";
 import styles from "@/components/main/styles.module.css";
 import JsonLd from "@/components/seo/JsonLd";
 import V86Emulator from "@/components/v86-emulator/V86Emulator";
@@ -23,48 +26,29 @@ export default function StartupOS() {
           { name: "Startup OS", path: "/projects/startupos" },
         ])}
       />
-      <PageHeader title="Startup OS Online VM">
-        This is an x86 assembly operating system I&apos;ve been working on, on
-        and off, for years. I mainly crunched on it back in 2018, and now I
-        mostly work on it on and off.
-      </PageHeader>
+      <ArticleHeader title="StartupOS" description="A small DOS-like operating system built in x86 assembly, based on MikeOS. Explore the commands or try it in your browser." />
 
       {/* Left-hand column: credits */}
-      <div className={styles.navLhs}>
-        <Window title="Credits" bodyStyle={{ padding: "10px 12px" }}>
-          <ul className={page.credits}>
-            <li>
-              <a href="https://mikeos.sourceforge.net/" target="_blank" rel="noopener noreferrer">
-                MikeOS
-              </a>
-              <span className={page.role}>Programmer</span>
-              <span className={page.note}>
-                I based the entire bootloader and syscalls on him.
-              </span>
-            </li>
-            <li>
-              <span className={page.name}>M4cgyver</span>
-              <span className={page.role}>Programmer</span>
-            </li>
-          </ul>
-        </Window>
-      </div>
+      <PostSidebar credits={[{label:"MikeOS",href:"https://mikeos.sourceforge.net/",note:"The foundation for the bootloader and system calls."}]} resources={[{label:"StartupOS source",href:"https://github.com/Lrios4403/StartupOS/tree/main",note:"Source code and project files."}]}>
+        <Contents sections={[{id:"overview",title:"Overview",level:2},{id:"browser-demo",title:"Browser demo",level:2},{id:"project-notes",title:"Project notes",level:2},{id:"commands",title:"Commands",level:3}]} />
+      </PostSidebar>
 
-      <div className={`${styles.contentArea} ${page.stack}`}>
-        <Window
+      <div className={`${styles.contentArea} ${page.stack}`}><ArticleLayout id="overview" title="Overview" className="" summary="A personal project for learning bootloaders, assembly, and the mechanics of an operating system. Built on MikeOS, with a small command shell and a FAT12 disk."><p><a href="https://github.com/Lrios4403/StartupOS/tree/main" target="_blank" rel="noopener noreferrer">Browse the source on GitHub ↗</a></p></ArticleLayout>
+        <Window id="browser-demo"
           title={
             <>
-              Startup OS <span className={page.online}>ONLINE</span>
+              StartupOS · Browser demo
             </>
           }
           bodyStyle={{ padding: 12 }}
         >
+          <p className={page.instructions}>Click the emulator screen to type. Try HELLO or DIR, and use Pause or Restart to control the session. A physical keyboard works best.</p>
           <V86Emulator disk="/projects/startupos/system.img" drive="fda" />
-          <span className={page.notification}>So it looks like it does work with v86, but it does in Bochs. Ill take a look and fix later.</span>
+          <p className={page.instructions}>This is an experimental browser demo. Compatibility can differ from running the image in Bochs.</p>
         </Window>
 
-        <Window title="Description" className={page.post}>
-          <h1>Startup OS: an entire operating system built in x86 assembly</h1>
+        <ArticleLayout id="project-notes" title="Project notes" className="">
+          <h2>Startup OS: an entire operating system built in x86 assembly</h2>
           <p>
             I always loved the aesthetic of old operating systems, primarily how
             they were programmed. I decided to learn all about x86 assembly and
@@ -73,7 +57,7 @@ export default function StartupOS() {
             of the MikeOS operating system.
           </p>
 
-          <h2>Commands</h2>
+          <h3 id="commands">Commands</h3>
           <ul>
             <li>
               <code>HELLO</code>: echoes &quot;Hello world!&quot;.
@@ -106,7 +90,7 @@ export default function StartupOS() {
           </p>
           
           <span className={page.notification}>You can download the source code on <a href="https://github.com/Lrios4403/StartupOS/tree/main" target="_blank" rel="noopener noreferrer">GitHub</a>.</span>
-        </Window>
+        </ArticleLayout>
       </div>
     </>
   );
