@@ -1,108 +1,127 @@
-/* Slideshow — card look copied from old site (slideshow.module.css + inline styles) */
-
 .slideshow {
-  font-family: var(--font-eagle), "Courier New", Courier, monospace;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid #8cc5e833;
+  border-radius: 12px;
+  background: linear-gradient(130deg, #12243bf5, #0b172af5);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
 
-/* Horizontally scrolling strip; dots scroll it to a card */
-.track {
+.header {
   display: flex;
-  gap: 1%;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 9px;
+}
+
+.header h2 {
   margin: 0;
-  padding: 0;
+  color: #edf5fc;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.header > span {
+  color: #94b4cb;
+  font-family: var(--font-toshiba), monospace;
+  font-size: 10px;
+}
+
+.track {
+  position: relative;
+  display: flex;
+  gap: 10px;
+  margin: 0;
+  padding: 3px;
   list-style: none;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
 }
-.track::-webkit-scrollbar {
-  display: none;
-}
+
+.track::-webkit-scrollbar { display: none; }
 
 .slide {
-  flex: 0 0 22%;
+  display: flex;
+  min-width: 0;
+  flex: 0 0 calc((100% - 20px) / 3);
   scroll-snap-align: start;
 }
 
-/* The card is a size container, so its text scales with the card's width
-   (cqi units) instead of getting cut off on narrow screens */
 .card {
-  position: relative;
-  display: block;
-  aspect-ratio: 1920 / 1080;
-  overflow: hidden;
-  border-radius: 10px;
-  container-type: inline-size;
-  /* Shows through the tint on cards without a picture */
-  background: linear-gradient(135deg, #f4efe6, #c9d4e4);
-  color: black;
-  text-decoration: none;
-  transition: transform 0.3s ease;
-}
-.card:hover {
-  transform: translateY(-2px);
-}
-
-.image {
-  display: block;
+  display: flex;
+  flex-direction: column;
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  overflow: hidden;
+  border: 1px solid #8cc5e826;
+  border-radius: 8px;
+  background: #122238;
+  color: #edf5fc;
+  text-decoration: none;
+  transition: border-color 180ms ease, background 180ms ease;
 }
 
-/* Tinted wash over the whole card, caption pinned to the bottom */
-.overlay {
+.card:hover { border-color: #9fdfdb99; background: #192e46; }
+.card:focus-visible, .controls button:focus-visible { outline: 2px solid #a6e7d6; outline-offset: 2px; }
+
+.visual {
+  position: relative;
+  height: clamp(80px, 8vw, 110px);
+  overflow: hidden;
+  background: #23364c;
+}
+
+.visual::after {
+  content: "";
   position: absolute;
   inset: 0;
-  z-index: 2;
+  background: linear-gradient(180deg, #08132111 40%, #08132199);
+  pointer-events: none;
 }
 
-.caption {
+.image { width: 100%; height: 100%; object-fit: cover; }
+
+.category, .number {
   position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 0 5cqi 4cqi;
+  z-index: 1;
+  font-family: var(--font-toshiba), monospace;
+  font-size: 10px;
 }
 
-.title {
-  display: block;
-  overflow: hidden;
-  font-size: clamp(11px, 8.2cqi, 20px);
-  line-height: 1.15;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+.category {
+  bottom: 8px;
+  left: 8px;
+  padding: 4px 6px;
+  border: 1px solid #b7d9ef40;
+  border-radius: 4px;
+  background: #0b172aed;
+  color: #b5ebe5;
 }
 
-.line {
-  display: block;
-  margin-top: 0.15em;
-  font-size: clamp(8px, 5cqi, 12px);
-  line-height: 1.2;
-}
-
-.dots {
-  display: flex;
-  justify-content: center;
-  gap: 1.25rem;
-  margin-top: 0.5rem;
-}
-
-.dot {
-  width: 10px;
-  height: 10px;
-  padding: 0;
-  border: none;
-  border-radius: 50%;
-  background-color: rgba(173, 216, 230, 0.35);
-  cursor: pointer;
-}
-.dotActive {
-  background-color: rgb(135, 206, 250);
-}
+.number { top: 10px; right: 10px; padding: 4px 6px; border-radius: 3px; background: #0b172ac9; color: #d3e5f4; }
+.caption { display: flex; flex-direction: column; flex: 1; padding: 11px; }
+.title { margin: 0; font-size: clamp(15px, 1.5vw, 18px); font-weight: 600; line-height: 1.3; letter-spacing: -0.025em; }
+.description { margin: 6px 0 10px; color: #b3c6da; font-size: 13px; line-height: 1.45; }
+.cta { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: auto; padding-top: 8px; border-top: 1px solid #8cc5e820; color: #a6e7d6; font-size: 12px; font-weight: 500; }
+.controls { display: none; }
 
 @media (max-width: 768px) {
-  .slide {
-    flex-basis: 70%;
-  }
+  .slideshow { padding: 8px; }
+  .slide { flex-basis: 100%; }
+  .title { font-size: 18px; }
+  .controls { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; }
+  .dots { display: flex; gap: 4px; }
+  .controls button { display: grid; place-items: center; width: 44px; height: 44px; cursor: pointer; }
+  .arrow { border: 1px solid #8cc5e833; border-radius: 6px; background: #172b42; color: #c5e9f1; font-size: 20px; }
+  .arrow:disabled { opacity: 0.3; cursor: default; }
+  .dot { border: 0; background: transparent; }
+  .dot span { width: 7px; height: 7px; border-radius: 8px; background: #627d95; }
+  .dot[aria-current="true"] span { width: 22px; background: #a6e7d6; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card { transition: none; }
 }
