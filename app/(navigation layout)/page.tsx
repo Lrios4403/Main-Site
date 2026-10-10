@@ -25,7 +25,7 @@ export default function Home() {
       </PageHeader>
 
       <section className={[styles.contentArea, home.profile].join(" ")} aria-labelledby="about-heading">
-        <Window className={home.overview} bodyStyle={{ padding: 0 }}>
+        <Window className={`${home.overview} ${styles.gridBackground}`} bodyStyle={{ padding: 0 }}>
           <div className={home.profileBar}>
             <span><span className={home.indicator} aria-hidden="true" />Personal workshop</span>
             <span className={home.profileFile}>about / logan-rios</span>
