@@ -1,0 +1,86 @@
+/* Contact / Socials page */
+
+.intro {
+  margin: 0 0 1.25rem;
+  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  font-size: 1rem;
+  line-height: 1.65;
+  color: #c9d6ec;
+}
+
+/* Grid of contact "cards" */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.85rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.card {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.85rem 1rem;
+  text-decoration: none;
+  background: rgba(4, 10, 24, 0.45);
+  border: 1px solid rgba(130, 180, 255, 0.2);
+  border-radius: 8px;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    transform 0.05s ease;
+}
+.card:hover {
+  border-color: #22d3ee;
+  background: rgba(4, 10, 24, 0.65);
+}
+.card:active {
+  transform: translateY(1px);
+}
+
+/* monospace glyph badge on the left of each card */
+.icon {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  font-family: var(--font-toshiba), "Courier New", Courier, monospace;
+  font-size: 1.1rem;
+  color: #eaf6ff;
+  background: linear-gradient(160deg, #2563eb 30%, #22d3ee 100%);
+  border-radius: 6px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+.cardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+.cardLabel {
+  font-family: var(--font-toshiba), "Courier New", Courier, monospace;
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
+  color: #93a4c4;
+}
+.cardValue {
+  font-family: var(--font-geist-mono), "Courier New", Courier, monospace;
+  font-size: 0.95rem;
+  color: #8fd3ff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* small "fill me in" note for placeholder links */
+.note {
+  margin: 1.25rem 0 0;
+  font-family: var(--font-toshiba), "Courier New", Courier, monospace;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: #6d80a6;
+}
