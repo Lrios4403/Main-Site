@@ -38,8 +38,29 @@ export default function Home() {
             </h1>
             <p className={home.summary}>
               I’m a California native who enjoys building software, exploring computer
-              systems, and finding new uses for old hardware. I learn by making things:
-              from an x86 operating system to a web archive and a repurposed mining rig.
+              systems, and finding new uses for old hardware. My curiosity takes me from
+              writing an x86 operating system to preserving the web, experimenting with
+              local AI, and turning a retired mining rig into something useful again.
+              I’m especially drawn to projects that let me understand how things work
+              beneath the surface—and build something I can keep using.
+            </p>
+            <p className={home.summary}>
+              I started taking college-level programming courses in junior high, then
+              built on that foundation through Brea Olinda’s Global IT Academy and
+              coursework at Grand Canyon University and Fullerton College. Along the
+              way, I completed MIT Professional Education’s certificate program in
+              Machine Learning &amp; Artificial Intelligence. I still learn best by
+              doing: following a tutorial, digging through documentation, and working
+              through the parts that don’t go as planned.
+            </p>
+            <p className={home.summary}>
+              That same approach carries into my professional work. At 2911Tech, I’ve
+              helped build custom applications and integrate AI into client workflows
+              using tools such as Python, TypeScript, C#, and Microsoft Azure AI.
+              My experience also includes website and database migrations, hardware
+              repair, and translating client needs into working software. Whether
+              I’m solving a practical problem or tinkering with retro technology,
+              I enjoy connecting software and hardware in unexpected ways.
             </p>
             <div className={home.actions}>
               <Link href="/projects/" className={home.primaryLink}>Explore my projects <span aria-hidden="true">↗</span></Link>
