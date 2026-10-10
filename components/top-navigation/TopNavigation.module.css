@@ -1,16 +1,12 @@
-/* Compact retro tabs with a shared frame and a distinct accent per section. */
+/* Individual compact buttons with a distinct accent per section. */
 .nav {
   min-width: 0;
-  padding: 5px;
-  border: 1px solid #8cc5e833;
-  border-radius: 9px;
-  background: linear-gradient(130deg, #12243bf5, #0b172af5);
-  box-shadow: 0 4px 16px #050d1926;
 }
 
 .list {
   display: flex;
-  gap: 5px;
+  flex-wrap: wrap;
+  gap: 8px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -18,7 +14,7 @@
   font-size: 13px;
 }
 
-.list li { flex: 1; min-width: 0; }
+.list li { min-width: 0; }
 .list li:nth-child(1) { --accent: #d7a783; }
 .list li:nth-child(2) { --accent: #a7a0ee; }
 .list li:nth-child(3) { --accent: #a9c69c; }
@@ -31,10 +27,13 @@
   align-items: center;
   justify-content: center;
   height: 100%;
-  min-height: 42px;
-  padding: 9px 8px;
-  border: 1px solid transparent;
-  border-radius: 5px;
+  min-height: 36px;
+  padding: 7px 14px;
+  border: 1px solid #8cc5e833;
+  border-bottom: 2px solid var(--accent);
+  border-radius: 6px;
+  background: linear-gradient(130deg, #12243bf5, #0b172af5);
+  box-shadow: 0 3px 10px #050d1926;
   color: #b9cadb;
   text-align: center;
   text-decoration: none;
@@ -42,36 +41,20 @@
   transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
 }
 
-.list a::after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: 25%;
-  right: 25%;
-  height: 2px;
-  border-radius: 2px;
-  background: var(--accent);
-  opacity: 0.4;
-  transition: opacity 150ms ease;
-}
-
-.list a:hover { background: #aacde710; color: #f0f6fb; }
-.list a:hover::after { opacity: 1; }
+.list a:hover { background: #20344c; color: #f0f6fb; }
 .list a[data-active] {
   color: #f0f6fb;
-  background: #a4c9ed15;
-  border-color: #b0d3ed26;
+  background: #24394f;
+  border-color: var(--accent);
   box-shadow: inset 0 1px 0 #ffffff08;
 }
-.list a[data-active]::after { left: 12px; right: 12px; opacity: 1; }
 .list a:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
 @media (max-width: 768px) {
-  .list { flex-wrap: wrap; gap: 4px; font-size: 12px; }
-  .list li { flex: 1 1 30%; }
-  .list a { padding: 8px 6px; min-height: 44px; }
+  .list { gap: 6px; font-size: 12px; }
+  .list a { padding: 8px 10px; min-height: 44px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .list a, .list a::after { transition: none; }
+  .list a { transition: none; }
 }
