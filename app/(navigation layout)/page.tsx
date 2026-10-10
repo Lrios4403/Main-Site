@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import introPhoto from "@/public/main/PXL_20230322_080050245.jpeg";
+import azureCredential from "@/public/main/azure-ai-fundamentals.webp";
 import floppy from "@/assets/floppy-384.png";
 import styles from "@/components/main/styles.module.css";
 import PageHeader from "@/components/page-header/PageHeader";
@@ -72,6 +73,22 @@ export default function Home() {
             <li>Hardware experiments</li>
             <li>Retro computing</li>
           </ul>
+        </Window>
+
+        <Window title="Credentials" className={home.detailWindow} bodyStyle={{ padding: 0 }}>
+          <figure className={home.credential}>
+            <a href="/main/azure-ai-fundamentals.webp" target="_blank" rel="noopener noreferrer" aria-label="Open the full-size Azure AI Fundamentals certificate">
+              <Image src={azureCredential} alt="Logan Rios — Microsoft Certified: Azure AI Fundamentals, earned July 30, 2026" sizes="(max-width: 768px) 90vw, 800px" />
+            </a>
+            <figcaption>
+              <div>
+                <p className={home.kicker}>Microsoft Certified</p>
+                <h2 className={home.sectionHeading}>Azure AI Fundamentals</h2>
+                <p className={home.copy}>Earned July 30, 2026</p>
+              </div>
+              <a href="https://learn.microsoft.com/en-us/users/loganrios-6430/credentials/certification/azure-ai-fundamentals" target="_blank" rel="noopener noreferrer" className={home.textLink}>View credential <span aria-hidden="true">↗</span></a>
+            </figcaption>
+          </figure>
         </Window>
 
         <div className={home.details}>

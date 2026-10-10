@@ -124,6 +124,37 @@
   margin-top: 18px;
 }
 
+.credential {
+  margin: 0;
+  padding: clamp(16px, 3vw, 28px);
+}
+
+.credential > a {
+  display: block;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.credential img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.credential figcaption {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding-top: 20px;
+}
+
+.credential a:focus-visible {
+  outline: 2px solid #a6e7d6;
+  outline-offset: 5px;
+}
+
 .actions {
   display: flex;
   flex-wrap: wrap;
