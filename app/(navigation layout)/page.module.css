@@ -7,21 +7,8 @@
 }
 
 .profile .overview {
-  isolation: isolate;
   background: linear-gradient(125deg, #12243b, #0b172a 72%);
   border-color: rgba(140, 197, 232, 0.3);
-}
-
-.overview::before {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  inset: 0;
-  background:
-    radial-gradient(ellipse at 95% 0%, rgba(78, 166, 201, 0.18), transparent 60%),
-    repeating-linear-gradient(0deg, transparent 0 31px, rgba(124, 178, 211, 0.035) 31px 32px),
-    repeating-linear-gradient(90deg, transparent 0 31px, rgba(124, 178, 211, 0.035) 31px 32px);
-  pointer-events: none;
 }
 
 .profileBar {
