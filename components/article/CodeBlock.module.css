@@ -1,0 +1,14 @@
+.block { min-width:0; margin:18px 0; border:1px solid #8cc5e833; border-radius:6px; overflow:hidden; background:#070f1e; }
+.toolbar { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:8px 12px; border-bottom:1px solid #8cc5e826; color:#a8bfd4; font:12px/1.5 var(--font-geist-mono), monospace; }
+.toolbar button, .expand { cursor:pointer; color:#a6e7d6; font:12px/1.5 var(--font-geist-sans), sans-serif; }
+.toolbar button { padding:4px 8px; border:1px solid #8cc5e833; border-radius:4px; }
+.code { overflow:auto; }
+.code[data-collapsed] { max-height:22rem; }
+.code pre { border:0; border-radius:0; box-shadow:none; }
+.expand { width:100%; padding:10px; border-top:1px solid #8cc5e826; background:#122238; }
+.block button:focus-visible, .code:focus-visible { outline:2px solid #a6e7d6; outline-offset:-2px; }
+
+.toolbar { font-family:var(--font-toshiba),monospace; background:linear-gradient(90deg,#163876,#165279); color:#d6ebff; box-shadow:inset 1px 1px #ffffff14; }
+.toolbar button, .expand { font-family:var(--font-toshiba),monospace; }
+
+.code .plain { margin:0; padding:16px; white-space:pre; font:13px/1.65 var(--font-geist-mono),monospace; color:#dbe7ff; background:#070f1e; }
