@@ -9,7 +9,8 @@ import oekaki from "@/public/buttons/oekaki.jpg";
 import daikonet from "@/public/buttons/daikonet.webp";
 import dokodemo from "@/public/buttons/dokodemo.gif";
 import gifShop from "@/public/buttons/99gifshop.png";
-import sidebar from "./Sidebar.module.css";
+import sidebar from "./Sidebar.module.css"; 
+import Link from "next/link";
 
 type Fren = {
   href: string;
@@ -82,53 +83,52 @@ export default function Sidebar({ trackViews = true }: { trackViews?: boolean })
         bodyStyle={{ padding: "8px 10px 10px 12px" }}
       >
         <ul className={styles.list}>
-          <li>
-            {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- the site uses plain <a> links throughout */}
-            <a className={styles.navLink} href="/">
+          <li> 
+            <Link className={styles.navLink} href="/">
               Homepage
-            </a>
+            </Link>
           </li>
           <li>
-            <a className={styles.navLink} href="/contact/">
+            <Link className={styles.navLink} href="/contact/">
               Contact / Socials
-            </a>
+            </Link>
           </li>
           <li>
-            <a className={styles.navLink} href="/games/">
+            <Link className={styles.navLink} href="/games/">
               Movies / Games
-            </a>
+            </Link>
           </li>
           <li>
-            <a className={styles.navLink} href="/blogs/">
+            <Link className={styles.navLink} href="/blogs/">
               Blog Postings
-            </a>
+            </Link>
             <ul className={styles.list}>
               <li>
-                <a className={styles.navLink} href="/blogs/nextjs-ordered-table-layout/">
+                <Link className={styles.navLink} href="/blogs/nextjs-ordered-table-layout/">
                   Ordered Table Layout
-                </a>
+                </Link>
               </li>
               <li>
-                <a className={styles.navLink} href="/blogs/llms-on-an-intel-npu/">
+                <Link className={styles.navLink} href="/blogs/llms-on-an-intel-npu/">
                   LLMs on an Intel NPU
-                </a>
+                </Link>
               </li>
             </ul>
           </li>
           <li>
-            <a className={styles.navLink} href="/projects/">
+            <Link className={styles.navLink} href="/projects/">
               Projects
-            </a>
+            </Link>
             <ul className={styles.list}>
               <li>
-                <a className={styles.navLink} href="/projects/archives/">
+                <Link className={styles.navLink} href="/projects/archives/">
                   Archives
-                </a>
+                </Link>
               </li>
               <li>
-                <a className={styles.navLink} href="/projects/startupos/">
+                <Link className={styles.navLink} href="/projects/startupos/">
                   StartupOS
-                </a>
+                </Link>
               </li>
             </ul>
           </li>
