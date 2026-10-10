@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import introPhoto from "@/public/main/PXL_20230322_080050245.jpeg";
 import styles from "@/components/main/styles.module.css";
 import PageHeader from "@/components/page-header/PageHeader";
@@ -8,7 +9,6 @@ import Window from "@/components/window/Window";
 import { homeJsonLd, pageMetadata, site } from "@/lib/seo";
 import home from "./page.module.css";
 
-// No title: the home page uses the site name on its own
 export const metadata: Metadata = pageMetadata({
   description: site.description,
   path: "/",
@@ -19,67 +19,78 @@ export default function Home() {
     <>
       <JsonLd data={homeJsonLd()} />
       <PageHeader title="M4cgyvers Repurposed Mining Rig!">
-        Welcome to my (M4cgyver) website / resume (depending on whos reading).
-        Written in NextJS 13 and NodeJs all within Docker!
+        Software, hardware, and a little creative reuse. A personal workshop by Logan Rios.
       </PageHeader>
 
-      <Window title="Introductions" className={styles.contentArea}>
-        <p hidden> I put this shit in chatgtp i need this to sound nicer</p>
-        <div className={home.intro}>
-          <h1 className={`${styles.title} ${home.hello}`}>Hello World!</h1>
-          <p className={home.first}>
-            My name is Logan Rios, a California native with a passion for
-            computer technology. I attended BOHS for high school, where I honed
-            my skills in computer science. Currently, Im pursuing a degree in
-            computer science and technology at Grand Canyon University in
-            Arizona, where Im constantly exploring and expanding my knowledge in
-            this field, though I always prefer self-taught methods such as
-            YouTube videos and blog websites. My favorite form of learning is
-            though creating fun projects that can be repurposed and reused in
-            the future whenever needed.
-          </p>
+      <section className={[styles.contentArea, home.profile].join(" ")} aria-labelledby="about-heading">
+        <Window className={home.overview} bodyStyle={{ padding: 0 }}>
+          <div className={home.overviewBody}>
+            <p className={home.eyebrow}>Logan Rios <span>/ M4cgyver</span></p>
+            <h1 id="about-heading" className={home.heading}>
+              Curious about how it works.<br />
+              <span>Happiest building it.</span>
+            </h1>
+            <p className={home.summary}>
+              I’m a California native who enjoys building software, exploring computer
+              systems, and finding new uses for old hardware. I learn by making things:
+              from an x86 operating system to a web archive and a repurposed mining rig.
+            </p>
+            <div className={home.actions}>
+              <Link href="/projects/" className={home.primaryLink}>Explore my projects <span aria-hidden="true">↗</span></Link>
+              <Link href="/contact/" className={home.textLink}>Get in touch <span aria-hidden="true">→</span></Link>
+            </div>
+          </div>
+          <ul className={home.interests} aria-label="Interests">
+            <li>Software &amp; systems</li>
+            <li>Hardware experiments</li>
+            <li>Retro computing</li>
+          </ul>
+        </Window>
 
-          <div className={home.spacer} />
-          <a
-            className={home.photo}
-            href="/main/PXL_20230322_080050245.jpeg"
-            target="_blank"
-          >
-            <Image
-              src={introPhoto}
-              alt="stupid mining rig"
-              className={styles.contentImage}
-              placeholder="blur"
-              sizes="(max-width: 768px) 100vw, 275px"
-            />
-          </a>
-          <p>
-            In my free time, I enjoy creating unique and innovative hardware
-            gimmicks, such as my gameboy that doubles as a keyfob or use a old
-            mining rig to host a website and train AI models ready for everyone
-            and anyone. I also have a strong interest in software development
-            and enjoy pushing the boundaries of whats possible with obscure
-            concepts and designs. One of my biggest software projects was
-            creating a complete x86 opperating system (it booted and ran
-            programs, thats about it. Could never figure out how to program
-            interrupts so I just had a <i>jmp</i> table). I always have a love
-            for old <i>retro</i> tech. If its games or just old computers parts
-            I always love to make use of them. For example; Im using a stack of
-            Floppy Disks to prop up my monitor because it fucking broke on the
-            way to colledge :D. My passion for technology has led me on a
-            journey of exploration and creativity, and Im excited to see where
-            it takes me in the future.
-          </p>
+        <div className={home.details}>
+          <Window title="Software & systems" className={home.detailWindow} bodyStyle={{ padding: 0 }}>
+            <div className={home.detailBody}>
+              <p className={home.kicker}>Selected projects</p>
+              <h2 className={home.sectionHeading}>Learning from the inside out.</h2>
+              <p className={home.copy}>
+                I like projects that give me a reason to understand what happens
+                beneath the surface.
+              </p>
+              <div className={home.projectList}>
+                <Link href="/projects/startupos/" className={home.project}>
+                  <span className={home.projectNumber} aria-hidden="true">01</span>
+                  <span><strong>StartupOS</strong><span className={home.projectDescription}>An x86 operating system you can boot in your browser.</span></span>
+                  <span className={home.arrow} aria-hidden="true">↗</span>
+                </Link>
+                <Link href="/projects/archives/" className={home.project}>
+                  <span className={home.projectNumber} aria-hidden="true">02</span>
+                  <span><strong>Web Archives</strong><span className={home.projectDescription}>A personal tool for preserving and exploring the web.</span></span>
+                  <span className={home.arrow} aria-hidden="true">↗</span>
+                </Link>
+              </div>
+              <Link href="/blogs/" className={home.textLink}>Read my notes on the process <span aria-hidden="true">→</span></Link>
+            </div>
+          </Window>
 
-          <div className={home.spacer} />
-          <p>
-            Honestly thats about it. Ill be posting blog updates on locations,
-            tips, projects, and games. Anyone else that posts more than that on
-            the internet has really bad opsec, bad with personal data, or isnt
-            Kenenough.
-          </p>
+          <Window title="Hardware & experiments" className={home.detailWindow} bodyStyle={{ padding: 0 }}>
+            <figure className={home.rig}>
+              <a href="/main/PXL_20230322_080050245.jpeg" target="_blank" rel="noopener noreferrer" aria-label="Open the full photo of my repurposed mining rig">
+                <Image src={introPhoto} alt="A repurposed mining rig and computer hardware in my workspace"
+                  className={home.photo} placeholder="blur" sizes="(max-width: 768px) 94vw, 410px" />
+              </a>
+              <figcaption>The hardware behind the name.</figcaption>
+            </figure>
+            <div className={home.hardwareCopy}>
+              <h2 className={home.sectionHeading}>Old hardware. New possibilities.</h2>
+              <p className={home.copy}>
+                A former mining rig became a home for this site and AI experiments.
+                A Game Boy became a key fob. I enjoy giving familiar technology a
+                different purpose—and seeing what I can learn along the way.
+              </p>
+            </div>
+          </Window>
         </div>
-      </Window>
+      </section>
     </>
   );
 }

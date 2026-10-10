@@ -1,57 +1,249 @@
-/* Home intro — layout copied from old site: big floated "Hello World!",
-   Verite 9x14 copy, photo floated left into the second paragraph */
-
-.intro {
-  font-family: var(--font-verite), "Courier New", Courier, monospace;
-  font-size: 16px;
-  line-height: 1.35;
+.profile {
+  min-width: 0;
+  display: grid;
+  gap: 14px;
   color: #c9d6ec;
-}
-.intro::after {
-  content: "";
-  display: block;
-  clear: both;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
 
-.intro p {
+.overview {
+  background: linear-gradient(125deg, rgba(16, 35, 62, 0.96), rgba(8, 17, 36, 0.88));
+}
+
+.overviewBody {
+  padding: clamp(22px, 3vw, 34px);
+}
+
+.eyebrow,
+.kicker {
   margin: 0;
+  font-family: var(--font-toshiba), "Courier New", monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #8edbfa;
 }
 
-.hello {
-  float: left;
-  padding-right: 8px;
-  font-size: 64px;
-  line-height: 1;
+.eyebrow span {
+  color: #9aadc9;
 }
 
-.first {
-  padding-top: 26px;
+.heading {
+  margin: 15px 0 18px;
+  color: #eef7ff;
+  font-size: clamp(26px, 3vw, 38px);
+  font-weight: 650;
+  line-height: 1.18;
+  letter-spacing: -0.04em;
 }
 
-.spacer {
-  height: 20px;
+.heading span {
+  color: #92d8f4;
+}
+
+.summary,
+.copy {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.75;
+  color: #b9c9df;
+}
+
+.summary {
+  max-width: 65ch;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 24px;
+  margin-top: 24px;
+}
+
+.primaryLink,
+.textLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 550;
+  line-height: 1.5;
+  text-decoration: none;
+}
+
+.primaryLink {
+  padding: 10px 14px;
+  color: #e8f8ff;
+  background: #173e61;
+  border: 1px solid #5288ac;
+  border-radius: 5px;
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.primaryLink:hover {
+  background: #205276;
+}
+
+.textLink {
+  color: #92d8f4;
+}
+
+.textLink:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.profile a:focus-visible {
+  outline: 2px solid #b9ecff;
+  outline-offset: 4px;
+  border-radius: 3px;
+}
+
+.interests {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 22px;
+  list-style: none;
+  margin: 0;
+  padding: 13px clamp(22px, 3vw, 34px);
+  border-top: 1px solid rgba(130, 180, 255, 0.18);
+  background: rgba(3, 12, 27, 0.3);
+  color: #9eb6d0;
+  font-family: var(--font-toshiba), "Courier New", monospace;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.interests li::before {
+  content: "+";
+  margin-right: 8px;
+  color: #6dcddc;
+}
+
+.details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 14px;
+}
+
+.detailWindow {
+  min-width: 0;
+}
+
+.detailBody,
+.hardwareCopy {
+  padding: 22px;
+}
+
+.sectionHeading {
+  margin: 9px 0 12px;
+  font-size: 21px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.025em;
+  color: #e1f1ff;
+}
+
+.projectList {
+  margin: 22px 0;
+  border-top: 1px solid rgba(130, 180, 255, 0.2);
+}
+
+.project {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+  padding: 16px 0;
+  border-bottom: 1px solid rgba(130, 180, 255, 0.2);
+  text-decoration: none;
+}
+
+.project strong {
+  display: block;
+  color: #d3ebff;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.projectDescription {
+  display: block;
+  margin-top: 5px;
+  color: #aabdd6;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.projectNumber {
+  padding-top: 3px;
+  color: #7d9ab7;
+  font-family: var(--font-toshiba), monospace;
+  font-size: 12px;
+}
+
+.arrow {
+  color: #87cefa;
+}
+
+.project:hover strong {
+  color: #a3e8ff;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.rig {
+  margin: 0;
+  position: relative;
+}
+
+.rig a {
+  display: block;
 }
 
 .photo {
-  float: left;
-  width: 275px;
-  max-width: 45%;
-  margin: 2px 12px 4px 0;
+  display: block;
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  object-position: center 48%;
+  border-bottom: 1px solid rgba(130, 180, 255, 0.2);
 }
 
-@media (max-width: 768px) {
-  .hello {
-    float: none;
-    font-size: 44px;
+.rig figcaption {
+  position: absolute;
+  bottom: 10px;
+  left: 12px;
+  max-width: calc(100% - 24px);
+  padding: 5px 8px;
+  background: rgba(5, 13, 28, 0.9);
+  border: 1px solid rgba(130, 180, 255, 0.25);
+  color: #cfdfef;
+  font-family: var(--font-toshiba), monospace;
+  font-size: 11px;
+  pointer-events: none;
+}
+
+.hardwareCopy .sectionHeading {
+  margin-top: 0;
+}
+
+@media (min-width: 769px) and (max-width: 1000px) {
+  .details {
+    grid-template-columns: 1fr;
   }
-  .first {
-    padding-top: 12px;
+}
+
+@media (max-width: 600px) {
+  .details {
+    grid-template-columns: 1fr;
   }
+
+  .heading {
+    font-size: 28px;
+  }
+
   .photo {
-    float: none;
-    display: block;
-    width: 100%;
-    max-width: 100%;
-    margin: 0 0 12px;
+    height: 210px;
   }
 }
