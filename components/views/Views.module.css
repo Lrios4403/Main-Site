@@ -32,6 +32,26 @@
   font-variant-numeric: tabular-nums;
 }
 
+.status {
+  font-size: 12px;
+  color: #add8e6;
+}
+
+.status:not(:empty) {
+  margin-top: 6px;
+}
+
+.status button {
+  color: #87cefa;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.status button:focus-visible {
+  outline: 1px solid #87cefa;
+  outline-offset: 2px;
+}
+
 /* Kept in the layout (display: none can skip the request) but invisible */
 .pixel {
   position: absolute;
