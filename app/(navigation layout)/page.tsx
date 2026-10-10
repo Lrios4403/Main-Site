@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import introPhoto from "@/public/main/PXL_20230322_080050245.jpeg";
+import floppy from "@/assets/floppy-384.png";
 import styles from "@/components/main/styles.module.css";
 import PageHeader from "@/components/page-header/PageHeader";
 import JsonLd from "@/components/seo/JsonLd";
@@ -24,7 +25,12 @@ export default function Home() {
 
       <section className={[styles.contentArea, home.profile].join(" ")} aria-labelledby="about-heading">
         <Window className={home.overview} bodyStyle={{ padding: 0 }}>
+          <div className={home.profileBar}>
+            <span><span className={home.indicator} aria-hidden="true" />Personal workshop</span>
+            <span className={home.profileFile}>about / logan-rios</span>
+          </div>
           <div className={home.overviewBody}>
+            <Image src={floppy} alt="" aria-hidden="true" className={home.floppy} sizes="80px" />
             <p className={home.eyebrow}>Logan Rios <span>/ M4cgyver</span></p>
             <h1 id="about-heading" className={home.heading}>
               Curious about how it works.<br />
@@ -48,7 +54,7 @@ export default function Home() {
         </Window>
 
         <div className={home.details}>
-          <Window title="Software & systems" className={home.detailWindow} bodyStyle={{ padding: 0 }}>
+          <Window title={<span className={home.windowLabel}><span>01</span> Software &amp; systems</span>} className={home.detailWindow} bodyStyle={{ padding: 0 }}>
             <div className={home.detailBody}>
               <p className={home.kicker}>Selected projects</p>
               <h2 className={home.sectionHeading}>Learning from the inside out.</h2>
@@ -72,7 +78,7 @@ export default function Home() {
             </div>
           </Window>
 
-          <Window title="Hardware & experiments" className={home.detailWindow} bodyStyle={{ padding: 0 }}>
+          <Window title={<span className={home.windowLabel}><span>02</span> Hardware &amp; experiments</span>} className={home.detailWindow} bodyStyle={{ padding: 0 }}>
             <figure className={home.rig}>
               <a href="/main/PXL_20230322_080050245.jpeg" target="_blank" rel="noopener noreferrer" aria-label="Open the full photo of my repurposed mining rig">
                 <Image src={introPhoto} alt="A repurposed mining rig and computer hardware in my workspace"
