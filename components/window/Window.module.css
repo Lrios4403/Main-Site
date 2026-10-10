@@ -82,3 +82,12 @@
 .body {
   padding: 1.1rem 1.35rem;
 }
+
+/* Native disclosure keeps the title-bar control keyboard accessible without JS. */
+.collapsible > summary { cursor: pointer; list-style: none; }
+.collapsible > summary::-webkit-details-marker { display: none; }
+.collapsible > summary::after { content: none; }
+.collapsible > summary:focus-visible { outline: 2px solid #b8e4ff; outline-offset: -3px; }
+.collapsible:not([open]) > .body { display: none; }
+.toggle { position:relative; z-index:1; display:inline-block; margin-right:10px; font:16px/1 var(--font-toshiba),monospace; color:white; }
+.collapsible[open] > summary .toggle { transform: rotate(90deg); }
