@@ -1,8 +1,8 @@
 import TopNavigation from "@/components/top-navigation/TopNavigation";
 import ViewPixel from "@/components/views/ViewPixel";
 
-// Pages here fill the left column themselves, so the site navigation moves
-// to the top bar. The pixel still counts their views (they have no Views window).
+// Detail pages here supply their own left column and use top navigation.
+// The pixel counts their views because they have no standard Sidebar.
 export default function NoNavigationLayout({
     children,
 }: Readonly<{
