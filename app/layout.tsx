@@ -91,8 +91,8 @@ export const viewport: Viewport = {
 };
 
 import styles from "@/components/main/styles.module.css";
-import Slideshow from "@/components/slideshow/Slideshow";
 import Window from "@/components/window/Window";
+import Link from "next/link";
 
 export default function RootLayout({
   children,
@@ -135,10 +135,10 @@ export default function RootLayout({
                 </div>
                 <nav className={styles.footerLinks} aria-label="Footer">
                   {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- the site uses plain <a> links throughout */}
-                  <a href="/">Home</a>
-                  <a href="/blogs/">Blog</a>
-                  <a href="/projects/">Projects</a>
-                  <a href="/contact/">Contact</a>
+                  <Link href="/">Home</Link>
+                  <Link href="/blogs/">Blog</Link>
+                  <Link href="/projects/">Projects</Link>
+                  <Link href="/contact/">Contact</Link>
                 </nav>
               </div>
             </Window>
