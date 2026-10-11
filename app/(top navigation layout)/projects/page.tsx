@@ -15,7 +15,7 @@ const cards = [
 ];
 export default function Projects() {
  return <><JsonLd data={breadcrumbJsonLd([{name:"Projects",path:"/projects"}])}/><PageHeader title="Projects and Workloads.">Software, systems, and things built to find out how they work.</PageHeader>
- <Window title="From the workshop" className={`${styles.contentArea} ${projects.surface}`}><ul className={projects.grid}>{cards.map(card => <li key={card.href}><Link href={card.href} className={projects.card}>
+ <Window title="From the workshop" className={`${styles.contentArea} ${styles.fillContent} ${projects.surface}`}><ul className={projects.grid}>{cards.map(card => <li key={card.href}><Link href={card.href} className={projects.card}>
  {card.image ? <Image src={card.image} alt="" className={projects.cover} sizes="(max-width:768px) 90vw, 400px"/> : <div className={projects.terminal} aria-hidden="true"><span>STARTUP OS</span><span>C:\&gt; HELLO</span><span>Hello world!<b>_</b></span></div>}
  <div className={projects.body}><h2>{card.title}</h2><p>{card.description}</p><ul className={projects.tags}>{card.tags.map(tag => <li key={tag}>{tag}</li>)}</ul><span className={projects.action}>Explore project <span aria-hidden="true">↗</span></span></div></Link></li>)}</ul></Window></>;
 }

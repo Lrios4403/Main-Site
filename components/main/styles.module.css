@@ -395,3 +395,15 @@
 .list a:hover {
   text-decoration: underline;
 }
+
+/* Index windows fill the entire content grid area beside the sidebar. */
+.fillContent {
+  width: 100%;
+  min-width: 0;
+  justify-self: stretch;
+  align-self: stretch;
+}
+.fillContent > :last-child {
+  flex: 1;
+  min-width: 0;
+}

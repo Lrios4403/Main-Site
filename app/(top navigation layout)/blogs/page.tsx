@@ -23,7 +23,7 @@ export default function BlogList() {
         Experiments, practical guides, and lessons from building software.
       </PageHeader>
 
-      <Window title="Blog Entries" className={`${styles.contentArea} ${list.surface}`}>
+      <Window title="Blog Entries" className={`${styles.contentArea} ${styles.fillContent} ${list.surface}`}>
         {posts.length === 0 ? (
           <p className={list.empty}>No postings yet. Check back soon!</p>
         ) : (

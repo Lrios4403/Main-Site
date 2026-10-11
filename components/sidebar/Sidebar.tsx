@@ -73,11 +73,11 @@ const frens: Fren[] = [
 ];
 
 // trackViews: false on pages that shouldn't count as a view (the 404 page)
-export default function Sidebar({ trackViews = true }: { trackViews?: boolean }) {
+export default function Sidebar({ trackViews = true, showNavigation = true }: { trackViews?: boolean; showNavigation?: boolean }) {
   return (
     <div className={`${styles.navLhs} ${styles.sidebar}`}>
       {/* Left-hand navigation — same links as the old site */}
-      <Window
+      {showNavigation && <Window
         title="Navigation"
         className={sidebar.nav}
         bodyStyle={{ padding: "8px 10px 10px 12px" }}
@@ -133,7 +133,7 @@ export default function Sidebar({ trackViews = true }: { trackViews?: boolean })
             </ul>
           </li>
         </ul>
-      </Window>
+      </Window>}
 
       <Window title="Views" bodyStyle={{ padding: "6px 10px 8px" }}>
         <ViewCounter track={trackViews} />

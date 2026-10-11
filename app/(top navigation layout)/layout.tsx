@@ -1,13 +1,13 @@
 import Sidebar from "@/components/sidebar/Sidebar";
 import TopNavigation from "@/components/top-navigation/TopNavigation";
 
-// Section indexes keep the complete sidebar, with top navigation and no slideshow.
-// Sidebar owns view tracking, so these pages need no separate tracking pixel.
+// Top navigation replaces only the sidebar navigation links.
+// Views (including tracking) and friends remain in the left column.
 export default function TopNavigationLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
       <TopNavigation />
-      <Sidebar />
+      <Sidebar showNavigation={false} />
       {children}
     </>
   );

@@ -26,7 +26,7 @@ export default function Games() {
 
       <Window
         title="Entertainment"
-        className={styles.contentArea}
+        className={`${styles.contentArea} ${styles.fillContent}`}
         bodyStyle={{ padding: 12 }}
       >
         <div className={games.screen}>
