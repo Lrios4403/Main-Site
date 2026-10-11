@@ -1,0 +1,6 @@
+.scroll { max-width: 100%; overflow-x: auto; margin: 1.5rem 0; }
+.scroll:focus-visible { outline: 2px solid #a6e7d6; outline-offset: 4px; }
+.table { width: 100%; border-collapse: collapse; font-size: 0.9rem; text-align: left; }
+.table caption { text-align: left; color: #a6e7d6; margin-bottom: 0.6rem; font-weight: 600; }
+.table th, .table td { padding: 0.65rem 0.8rem; border: 1px solid #8cc5e833; vertical-align: top; min-width: 9rem; }
+.table th { color: #dcecff; background: #8cc5e80a; font-weight: 600; }

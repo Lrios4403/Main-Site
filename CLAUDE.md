@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 @AGENTS.md
 
-This is a personal site, "M4cgyvers Repurposed Mining Rig", built with Next 16.2 (App Router), React 19.2, TypeScript and Bun. There is no test framework.
+This is a personal site, "M4cgyvers Repurposed Mining Rig", built with Next 16.2 (App Router), React 19.2, TypeScript and Bun. SEO regression checks use Bun's built-in test runner.
 
 ## Commands
 
@@ -12,6 +12,8 @@ This is a personal site, "M4cgyvers Repurposed Mining Rig", built with Next 16.2
 bun install
 bun dev                      # http://localhost:3000
 bun run build
+bun run test:seo             # unit and malformed HTML fixture checks
+bun run check:seo            # bounded audit against localhost:3000
 bunx tsc --noEmit            # typecheck
 bunx eslint app components lib   # lint (see below for why not `bun run lint`)
 ```
@@ -101,3 +103,16 @@ All content is hardcoded:
 - `tsconfig.bundle.json` maps `/main/*` to `public/main/*` so that CSS `url()`s resolve.
 
 When you add a component to the design system, update both `entry.tsx` and `componentSrcMap`. `.ds-sync/` (converter scripts and state) and `ds-bundle/` (build output) are gitignored and generated.
+
+## Reusable blog publishing
+
+- `lib/posts.ts` is the only explicit post registry. Keep bodies in their existing static TSX routes; do not add a parallel dynamic route or content DSL. `status` means `published` or `draft`; use `badge` for a display label.
+- `lib/blog/` owns typed contracts, author lookup, calendar dates, canonical URLs, metadata, JSON-LD, related links and validation. `lib/site.ts` is canonical site configuration. `lib/seo.ts` retains generic page metadata and compatibility exports.
+- A post route calls `buildPostMetadata(info)` and wraps its TSX in `ArticleShell post={info}`. `ArticleShell` composes the existing retro header, sidebar, Contents and Window components. The semantic outer article uses `display: contents` to retain the root grid; root layout already owns main. ArticleLayout's `asArticle={false}` avoids nesting articles while preserving its default for project pages.
+- Title, dates, author, summary, resources and TOC manifest live in the record. Preserve existing anchor IDs. Navigation remains last and sticky; author/resources remain above it. Post bodies still support diagrams, commands, tables and live demos.
+- Set real publication/update dates manually. A metadata-only migration does not require an updated date. Never use the build clock for sitemap lastmod.
+- Covers are optional real local assets with dimensions, informative alt text and captions. ArticleFigure renders them. Do not label generic slideshow artwork as evidence or invent representative screenshots. Coverless articles omit BlogPosting.image and use a Twitter summary card. Next's root file-based OG image may still supply branded share art.
+- Related links are explicitly curated published slugs, not automatic crosslinks. No current related pair is declared between the unrelated CSS and Intel posts.
+- SEO builders/registry use the `server-only` marker. Bun test preload mocks only that marker; the standalone localhost audit uses a dedicated preload to run server modules outside Next.
+- Run `bun run test:seo`, `bun run check:seo [http://localhost:PORT]`, typecheck, targeted lint and a build. The audit fetches only registered article routes, index, robots, sitemap and declared cover assets. Never execute published commands or crawl localhost URLs embedded in article examples.
+- Intel-only editorial evidence stays in its route's SetupNotes.tsx. Unrecorded versions and hardware results must remain unclaimed. Companion templates in docs/examples/intel-npu are local review material, not a published companion project.

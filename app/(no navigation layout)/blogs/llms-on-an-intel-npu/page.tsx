@@ -1,52 +1,20 @@
+import { QuickStart, FirstDownload, VerificationNotes } from "./SetupNotes";
 import { CodeBlock } from "@/components/article/CodeBlock";
 import type { Metadata } from "next";
-import ArticleHeader from "@/components/article/ArticleHeader";
-import ArticleLayout from "@/components/article/ArticleLayout";
-import Contents from "@/components/article/Contents";
-import PostSidebar, { type Resource } from "@/components/post-sidebar/PostSidebar";
-import JsonLd from "@/components/seo/JsonLd";
 import { getPost } from "@/lib/posts";
-import { postJsonLd, postMetadata } from "@/lib/seo";
+import { buildPostMetadata } from "@/lib/blog/metadata";
+import ArticleShell from "@/components/article/ArticleShell";
 
 // Title, description, dates and tags live in lib/posts.ts
 const info = getPost("llms-on-an-intel-npu");
 
-export const metadata: Metadata = postMetadata(info);
+export const metadata: Metadata = buildPostMetadata(info);
 
-// Everything the post links to or installs
-const resources: Resource[] = [
-  {
-    label: "Intel NPU Driver",
-    href: "https://www.intel.com/content/www/us/en/download/794734/intel-npu-driver-windows.html",
-    note: "Windows driver for the AI Boost NPU.",
-  },
-  {
-    label: "OpenVINO Model Server",
-    href: "https://github.com/openvinotoolkit/model_server",
-    note: "Intel's model server, runs the model on the NPU.",
-  },
-  {
-    label: "Qwen3 8B (OpenVINO)",
-    href: "https://huggingface.co/OpenVINO/Qwen3-8B-int4-cw-ov",
-    note: "The int4 model the post runs.",
-  },
-  {
-    label: "NoLlama",
-    href: "https://github.com/aweussom/NoLlama",
-    note: "A lighter alternative to OVMS.",
-  },
-];
 
 export default function BlogOpenVINOModelServerSetup() {
   return (
-    <>
-      <JsonLd data={postJsonLd(info)} />
-      <ArticleHeader title={info.title} description={info.description} post={info} />
-
-      {/* Left-hand column: post info, resources and the table of contents */}
-      <PostSidebar post={info} resources={resources}><Contents sections={[{"id": "abstract", "title": "Abstract", "level": 2}, {"id": "backend", "title": "Backend Model Server", "level": 2}, {"id": "ovms", "title": "OpenVINO Model Server", "level": 3}, {"id": "nollama", "title": "NoLlama", "level": 3}, {"id": "frontend", "title": "Frontend AI Assistants", "level": 2}, {"id": "openwork", "title": "OpenWork", "level": 3}, {"id": "claude-code", "title": "Claude Code", "level": 3}, {"id": "final-setup", "title": "Final Setup", "level": 2}]} /></PostSidebar>
-
-      <ArticleLayout title="Article" summary="Set up a local model server on an Intel NPU, connect it to AI assistants, and work through the configuration details that made this setup useful.">
+    <ArticleShell post={info}>
+        <QuickStart />
 
         <h2 id="abstract">Abstract</h2>
 
@@ -108,7 +76,7 @@ Intel NPU`} />
 
         <h3 id="ovms">OpenVINO Model Server</h3>
 
-        <h4>Prerequisites</h4>
+        <h4 id="intel-npu-drivers">Prerequisites</h4>
 
         <ul>
           <li>
@@ -136,7 +104,7 @@ Intel NPU`} />
           </li>
         </ul>
 
-        <h4>Installation</h4>
+        <h4 id="install-ovms">Installation</h4>
 
         <ol>
           <li>
@@ -208,7 +176,7 @@ Intel NPU`} />
           <li>
             <code>--pull</code>
             <p>
-              Downloads the requested model before starting the server.
+              Prepares the requested model. Whether serving starts in the same invocation depends on the release and other arguments; check the first-download notes below.
             </p>
           </li>
 
@@ -280,15 +248,16 @@ Intel NPU`} />
 
         <h4>Basic Example</h4>
 
-        <CodeBlock kind="command" code={`ovms.exe --pull --rest_port 8000 --source_model OpenVINO/Qwen2-0.5B-int4-ov --model_repository_path ".\\models" --task text_generation`} />
+        <CodeBlock kind="command" label="Windows CMD" code={`ovms.exe --pull --rest_port 8000 --source_model OpenVINO/Qwen2-0.5B-int4-ov --model_repository_path ".\\models" --task text_generation`} />
 
-        <h4>NPU Qwen3 Example</h4>
+        <FirstDownload />
+        <h4 id="launch-qwen3">NPU Qwen3 Example — subsequent launch</h4>
 
         <p>
           This is the configuration I use for Qwen3 8B on the Intel NPU:
         </p>
 
-        <CodeBlock kind="command" code={`ovms.exe ^
+        <CodeBlock kind="command" label="Windows CMD" code={`ovms.exe ^
   --rest_port 8000 ^
   --model_repository_path "%USERPROFILE%\\Downloads\\models" ^
   --source_model OpenVINO/Qwen3-8B-int4-cw-ov ^
@@ -309,7 +278,7 @@ Intel NPU`} />
         <CodeBlock kind="config" label="Setting" code={"Qwen3-8B"} />
 
         <p>
-          OVMS also exposes OpenAI-compatible endpoints under:
+          The original client configurations below use this API base; verify it against your installed OVMS release (see the inference check):
         </p>
 
         <CodeBlock kind="config" label="Setting" code={"http://localhost:8000/v1"} />
@@ -421,7 +390,7 @@ Intel NPU`} />
           <li>
             <p>Start Qwen3 8B:</p>
 
-            <CodeBlock kind="command" code={`ovms.exe ^
+            <CodeBlock kind="command" label="Windows CMD" code={`ovms.exe ^
   --rest_port 8000 ^
   --model_repository_path "%USERPROFILE%\\Downloads\\models" ^
   --source_model OpenVINO/Qwen3-8B-int4-cw-ov ^
@@ -666,7 +635,7 @@ Intel NPU`} />
               Start OVMS using the same Qwen3 configuration:
             </p>
 
-            <CodeBlock kind="command" code={`ovms.exe ^
+            <CodeBlock kind="command" label="Windows CMD" code={`ovms.exe ^
   --rest_port 8000 ^
   --model_repository_path "%USERPROFILE%\\Downloads\\models" ^
   --source_model OpenVINO/Qwen3-8B-int4-cw-ov ^
@@ -974,7 +943,7 @@ Intel AI Boost NPU`} />
           work, tool calls, and agent workflows without burning Claude tokens
           or occupying the laptop&apos;s RTX GPU.
         </p>
-      </ArticleLayout>
-    </>
+        <VerificationNotes />
+    </ArticleShell>
   );
 }

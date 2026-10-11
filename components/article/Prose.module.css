@@ -226,8 +226,12 @@
 .demo summary { cursor: pointer; color: #a6e7d6; font-size: 15px; }
 .demo > a { display: inline-block; margin-top: 12px; font-size: 13px; }
 
-.post article { max-width: 72ch; margin-inline: auto; }
-.post article > :first-child { margin-top: 0; }
+.post article, .body { max-width: 72ch; margin-inline: auto; }
+.post article > :first-child, .body > :first-child { margin-top: 0; }
 
 .meta { font-family: var(--font-toshiba), monospace; font-size: 13px; }
 .post h4 { font-family: var(--font-toshiba), monospace; font-weight: 400; }
+
+.post dl { margin: 1rem 0; }
+.post dt { margin-top: 1rem; }
+.post dd { margin: 0.25rem 0 0; max-width: 70ch; }

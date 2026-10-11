@@ -1,12 +1,8 @@
 import type { Metadata } from "next";
-import ArticleHeader from "@/components/article/ArticleHeader";
-import ArticleLayout from "@/components/article/ArticleLayout";
-import Contents from "@/components/article/Contents";
 import DemoPanel from "@/components/article/DemoPanel";
-import PostSidebar, { type Resource } from "@/components/post-sidebar/PostSidebar";
-import JsonLd from "@/components/seo/JsonLd";
 import { getPost } from "@/lib/posts";
-import { postJsonLd, postMetadata } from "@/lib/seo";
+import { buildPostMetadata } from "@/lib/blog/metadata";
+import ArticleShell from "@/components/article/ArticleShell";
 import post from "@/components/article/Prose.module.css";
 
 
@@ -34,47 +30,12 @@ import { CodeBlock } from "@/components/article/CodeBlock";
 // Title, description, dates and tags live in lib/posts.ts
 const info = getPost("nextjs-ordered-table-layout");
 
-export const metadata: Metadata = postMetadata(info);
+export const metadata: Metadata = buildPostMetadata(info);
 
-// The example project, its demos, and the docs behind the technique
-const resources: Resource[] = [
-  {
-    label: "Example Project",
-    href: "https://github.com/Lrios4403/NextJS-Ordered-Table-Layout",
-    note: "The full Next.js project on GitHub.",
-  },
-  {
-    label: "Live Demo",
-    href: "https://githubbox.com/Lrios4403/NextJS-Ordered-Table-Layout",
-    note: "The project running on CodeSandbox.",
-  },
-  {
-    label: "Basic HTML Example",
-    href: "https://codesandbox.io/p/sandbox/rfz7jw",
-    note: "The plain HTML version.",
-  },
-  {
-    label: "grid-template-areas",
-    href: "https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/grid-template-areas",
-    note: "MDN reference.",
-  },
-  {
-    label: "Next.js Layouts and Pages",
-    href: "https://nextjs.org/docs/app/getting-started/layouts-and-pages",
-    note: "Next.js docs.",
-  },
-];
 
 export default function BlogNextJSOrderedTableLayout() {
   return (
-    <>
-      <JsonLd data={postJsonLd(info)} />
-      <ArticleHeader title={info.title} description={info.description} post={info} />
-
-      {/* Left-hand column: post info, resources and the table of contents */}
-      <PostSidebar post={info} resources={resources}><Contents sections={[{"id": "abstract", "title": "Abstract", "level": 2}, {"id": "basic-example", "title": "Basic Example", "level": 2}, {"id": "implementing-in-nextjs", "title": "Implementing in Next.js", "level": 2}, {"id": "adding-more-to-the-side", "title": "Adding More to the Side", "level": 3}, {"id": "the-grid-container", "title": "The Grid Container", "level": 3}, {"id": "global-styles", "title": "Global Styles", "level": 3}, {"id": "the-root-layout", "title": "The Root Layout", "level": 3}, {"id": "the-home-page", "title": "The Home Page", "level": 3}, {"id": "the-page-component", "title": "The Page Component", "level": 3}, {"id": "the-about-page", "title": "The About Page", "level": 3}, {"id": "the-contact-page", "title": "The Contact Page", "level": 3}, {"id": "running-the-project", "title": "Running the Project", "level": 3}]} /></PostSidebar>
-
-      <ArticleLayout title="Article" summary="Define a shared CSS grid, place components from different layouts into named areas, and try the approach in a small Next.js example.">
+    <ArticleShell post={info}>
         <h2 id="abstract">Abstract</h2>
         <p>
           While working on my website, I had trouble keeping my components in the
@@ -336,7 +297,6 @@ export default function BlogNextJSOrderedTableLayout() {
           <code>http://localhost:3000</code>.
         </p>
         <CodeBlock kind="command" code={runProjectExample} language="bash" />
-      </ArticleLayout>
-    </>
+      </ArticleShell>
   );
 }

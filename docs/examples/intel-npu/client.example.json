@@ -1,0 +1,7 @@
+{
+  "templateOnly": true,
+  "verifiedWithRelease": null,
+  "apiBase": "http://localhost:8000/v3",
+  "model": "Qwen3-8B",
+  "note": "Verify the API version and advertised model ID against your installed server before adapting a frontend-specific configuration."
+}

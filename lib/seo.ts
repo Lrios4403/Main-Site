@@ -1,26 +1,10 @@
 import type { Metadata } from "next";
-import { type Post, postPath } from "@/lib/posts";
-
-// Site-wide SEO settings. `url` is the canonical domain: it's the
-// metadataBase, and the sitemap, robots.txt and JSON-LD build absolute URLs
-// from it.
-export const site = {
-  name: "M4cgyvers Repurposed Mining Rig",
-  url: "https://m4cgyver.net",
-  description:
-    "Personal site and resume of Logan Rios (M4cgyver), hosted on a repurposed mining rig: blog posts, a self-hosted web archive, and an x86 OS you can boot in your browser.",
-  locale: "en_US",
-  author: {
-    name: "Logan Rios",
-    alternateName: "M4cgyver",
-    sameAs: [
-      "https://github.com/Lrios4403",
-      "http://fed.m4cgyver.net/users/m4c",
-    ],
-  },
-};
-
-export const absoluteUrl = (path: string) => new URL(path, site.url).toString();
+import { site } from "@/lib/site";
+import { absoluteUrl } from "@/lib/blog/urls";
+export { site } from "@/lib/site";
+export { absoluteUrl } from "@/lib/blog/urls";
+export { buildPostMetadata as postMetadata } from "@/lib/blog/metadata";
+export { buildPostJsonLd as postJsonLd } from "@/lib/blog/schema";
 
 // app/opengraph-image.tsx. Metadata merges shallowly, so a page that sets its
 // own openGraph drops the root's image unless it lists it again.
@@ -74,19 +58,12 @@ export function pageMetadata({ title, description, path, article, noIndex }: Pag
   };
 }
 
-export const postMetadata = (post: Post) =>
-  pageMetadata({
-    title: post.title,
-    description: post.description,
-    path: postPath(post.slug),
-    article: { published: post.published, modified: post.updated, tags: post.tags },
-  });
-
 // ---------------------------------------------------------------------------
 // JSON-LD (rendered with components/seo/JsonLd.tsx)
 
 const person = {
   "@type": "Person",
+  "@id": absoluteUrl("/#person"),
   name: site.author.name,
   alternateName: site.author.alternateName,
   url: absoluteUrl("/"),
@@ -97,6 +74,7 @@ export const homeJsonLd = () => [
   {
     "@context": "https://schema.org",
     "@type": "WebSite",
+    "@id": absoluteUrl("/#website"),
     name: site.name,
     alternateName: ["M4cgyver", "m4cgyver.net"],
     url: absoluteUrl("/"),
@@ -124,27 +102,3 @@ export const breadcrumbJsonLd = (crumbs: Crumb[]) => ({
     item: absoluteUrl(crumb.path),
   })),
 });
-
-// A post's BlogPosting plus its breadcrumbs. The dates match the ones shown
-// in the post's "Post Info" window.
-export const postJsonLd = (post: Post) => [
-  {
-    "@context": "https://schema.org",
-    "@type": "BlogPosting",
-    headline: post.title,
-    description: post.description,
-    url: absoluteUrl(postPath(post.slug)),
-    mainEntityOfPage: absoluteUrl(postPath(post.slug)),
-    image: absoluteUrl(ogImage.url),
-    datePublished: post.published,
-    dateModified: post.updated ?? post.published,
-    author: person,
-    publisher: person,
-    keywords: post.tags,
-    inLanguage: "en-US",
-  },
-  breadcrumbJsonLd([
-    { name: "Blog", path: "/blogs" },
-    { name: post.title, path: postPath(post.slug) },
-  ]),
-];

@@ -1,0 +1,8 @@
+.shell { display: contents; }
+.breadcrumbs { font-family: var(--font-toshiba), monospace; font-size: 13px; margin-bottom: 1.5rem; }
+.breadcrumbs ol { display: flex; flex-wrap: wrap; gap: 4px 8px; list-style: none; padding: 0; margin: 0; }
+.breadcrumbs ol > li { margin: 0; padding: 0; }
+.breadcrumbs li + li::before { content: ">"; margin-right: 8px; color: #97afc5; }
+.figure { margin: 1.5rem 0; }
+.figure img { width: 100%; height: auto; border: 1px solid #8cc5e833; }
+.figure figcaption { margin-top: 0.5rem; font-size: 0.875rem; color: #a7bacd; }

@@ -1,0 +1,2 @@
+[test]
+preload = ["./scripts/seo/test-setup.ts"]

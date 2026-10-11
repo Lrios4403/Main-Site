@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:seo": "bun test scripts/seo/blog.test.ts",
+    "check:seo": "bun --preload ./scripts/seo/server-preload.ts scripts/seo/check-posts.ts"
   },
   "dependencies": {
     "@codesandbox/sandpack-react": "^2.20.0",
@@ -14,14 +16,17 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-syntax-highlighter": "^16.1.1",
+    "server-only": "^0.0.1",
     "v86": "0.5.470"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/bun": "^1.4.2",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/react-syntax-highlighter": "^15.5.13",
+    "cheerio": "^1.2.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
     "tailwindcss": "^4",

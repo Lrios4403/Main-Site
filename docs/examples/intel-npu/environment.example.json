@@ -1,0 +1,19 @@
+{
+  "templateVersion": "0.1",
+  "testedAt": null,
+  "laptop": "OMEN MAX Gaming Laptop 16 (reported in article)",
+  "processor": null,
+  "npu": "Intel AI Boost (exact generation unrecorded)",
+  "windowsBuild": null,
+  "npuDriver": null,
+  "ovmsRelease": null,
+  "sourceModel": "OpenVINO/Qwen3-8B-int4-cw-ov",
+  "modelRevision": null,
+  "configuredModelId": "Qwen3-8B",
+  "toolParser": "hermes3",
+  "modelDiscoveryPassed": null,
+  "chatPassed": null,
+  "npuExecutionObserved": null,
+  "toolCallPassed": null,
+  "evidenceFiles": []
+}

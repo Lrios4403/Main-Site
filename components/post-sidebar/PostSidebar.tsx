@@ -1,3 +1,5 @@
+import { getAuthor } from "@/lib/blog/authors";
+import type { ArticleResource } from "@/lib/blog/types";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import styles from "@/components/main/styles.module.css";
@@ -5,7 +7,7 @@ import Window from "@/components/window/Window";
 import { formatDate, type Post } from "@/lib/posts";
 import side from "./PostSidebar.module.css";
 
-export type Resource = { label: string; href: string; note?: string };
+export type Resource = ArticleResource;
 type PostSidebarProps = {
   post?: Post;
   resources?: Resource[];
@@ -14,6 +16,7 @@ type PostSidebarProps = {
 };
 
 export default function PostSidebar({ post, resources = [], credits = [], children }: PostSidebarProps) {
+  const author = getAuthor(post?.authorId ?? "logan-rios");
   const referenceList = (items: Resource[]) => (
     <ul className={side.list}>
       {items.map(item => <li key={item.href}>
@@ -26,7 +29,7 @@ export default function PostSidebar({ post, resources = [], credits = [], childr
     <aside className={`${styles.navLhs} ${side.column}`}>
       <Window collapsible title={post ? "Author & post info" : "Author"} bodyStyle={{ padding: "12px" }}>
         <ul className={side.list}>
-          <li><Link href="/" rel="author">Logan Rios (M4cgyver)</Link><span className={side.label}>Author</span></li>
+          <li><Link href={author.path} rel="author">{author.name}{author.alternateName && ` (${author.alternateName})`}</Link><span className={side.label}>Author</span></li>
           {post && <>
             <li><time className={side.value} dateTime={post.published}>{formatDate(post.published)}</time><span className={side.label}>Published</span></li>
             {post.updated && <li><time className={side.value} dateTime={post.updated}>{formatDate(post.updated)}</time><span className={side.label}>Updated</span></li>}

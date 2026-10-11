@@ -30,11 +30,11 @@ export default function BlogList() {
           <ul className={list.list}>
             {posts.map((post) => (
               <li key={post.slug}>
-                <a className={list.card} href={`/blogs/${post.slug}/`}>
+                <a className={list.card} href={post.path}>
                   <div className={list.cardHead}>
                     <h2 className={list.cardTitle}>{post.title}</h2>
-                    {post.status && (
-                      <span className={list.status}>{post.status}</span>
+                    {post.badge && (
+                      <span className={list.status}>{post.badge}</span>
                     )}
                   </div>
                   <p className={list.cardDesc}>{post.description}</p>
