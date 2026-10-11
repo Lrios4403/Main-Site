@@ -116,3 +116,12 @@ When you add a component to the design system, update both `entry.tsx` and `comp
 - SEO builders/registry use the `server-only` marker. Bun test preload mocks only that marker; the standalone localhost audit uses a dedicated preload to run server modules outside Next.
 - Run `bun run test:seo`, `bun run check:seo [http://localhost:PORT]`, typecheck, targeted lint and a build. The audit fetches only registered article routes, index, robots, sitemap and declared cover assets. Never execute published commands or crawl localhost URLs embedded in article examples.
 - Intel-only editorial evidence stays in its route's SetupNotes.tsx. Unrecorded versions and hardware results must remain unclaimed. Companion templates in docs/examples/intel-npu are local review material, not a published companion project.
+
+## Site-wide page SEO
+
+- `lib/site-pages.ts` owns metadata and breadcrumb hierarchy for the homepage, blog index, project index/details, contact and games. Project cards use its project records too; new static public pages belong here.
+- Each static page exports `sitePageMetadata(info)` and renders `sitePageJsonLd(info)`. The homepage owns the WebSite/Person entities; other pages reference those stable identities. Collections list only actual published entries; project notes use CreativeWork, not invented product/offer/review data.
+- `PageBreadcrumbs` renders the same hierarchy as JSON-LD inside the existing content windows. Root and article layouts remain unchanged. The homepage introduction is H2 under the existing PageHeader H1.
+- The sitemap unions static page records with published blog records. Preserve authentic lastModified values and omit unknown dates. Shared canonical/OG/Twitter URLs use the production origin; internal navigation uses non-trailing-slash canonical paths.
+
+- Navigation links between this app's pages use `next/link`. Use regular anchors for external sites, mailto links, static PDF/image downloads, and same-page fragment navigation. Do not rewrite instructional code samples as live application links.

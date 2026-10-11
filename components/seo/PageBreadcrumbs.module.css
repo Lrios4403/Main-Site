@@ -1,0 +1,6 @@
+.breadcrumbs { margin: 0 0 16px; color: #a7bacd; font: 13px/1.5 var(--font-toshiba), monospace; }
+.breadcrumbs ol { display: flex; flex-wrap: wrap; gap: 4px 8px; list-style: none; padding: 0; margin: 0; }
+.breadcrumbs ol > li { padding: 0; margin: 0; }
+.breadcrumbs li + li::before { content: ">"; margin-right: 8px; }
+.breadcrumbs a { color: #87cefa; text-decoration: underline; text-underline-offset: 3px; }
+.breadcrumbs a:focus-visible { outline: 2px solid #a6e7d6; outline-offset: 3px; }

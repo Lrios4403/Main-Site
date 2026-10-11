@@ -1,19 +1,17 @@
+import { sitePages } from "@/lib/site-pages";
 import type { MetadataRoute } from "next";
 import { getPublishedPosts } from "@/lib/posts";
 import { absoluteUrl } from "@/lib/seo";
 
-// /sitemap.xml. Blog posts come from lib/posts.ts; add other new pages here.
+// Public routes come from the static-page and published-article registries.
 export default function sitemap(): MetadataRoute.Sitemap {
   const posts = getPublishedPosts();
-  const pages: MetadataRoute.Sitemap = [
-    { url: absoluteUrl("/"), changeFrequency: "monthly", priority: 1 },
-    { url: absoluteUrl("/blogs"), lastModified: posts.map(post => post.updated ?? post.published).sort().at(-1), changeFrequency: "weekly", priority: 0.9 },
-    { url: absoluteUrl("/projects"), changeFrequency: "monthly", priority: 0.8 },
-    { url: absoluteUrl("/projects/archives"), lastModified: "2026-10-06", changeFrequency: "monthly", priority: 0.7 },
-    { url: absoluteUrl("/projects/startupos"), lastModified: "2026-10-06", changeFrequency: "monthly", priority: 0.7 },
-    { url: absoluteUrl("/contact"), changeFrequency: "yearly", priority: 0.5 },
-    { url: absoluteUrl("/games"), changeFrequency: "monthly", priority: 0.3 },
-  ];
+  const pages: MetadataRoute.Sitemap = sitePages.map(page => ({
+    url: absoluteUrl(page.path),
+    lastModified: page.path === "/blogs"
+      ? posts.map(post => post.updated ?? post.published).sort().at(-1)
+      : page.lastModified,
+  }));
 
   const blogPosts: MetadataRoute.Sitemap = posts.map((post) => ({
     url: absoluteUrl(post.path),

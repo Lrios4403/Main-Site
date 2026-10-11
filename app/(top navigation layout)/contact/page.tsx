@@ -1,17 +1,16 @@
+import PageBreadcrumbs from "@/components/seo/PageBreadcrumbs";
 import type { Metadata } from "next";
 import styles from "@/components/main/styles.module.css";
 import PageHeader from "@/components/page-header/PageHeader";
 import JsonLd from "@/components/seo/JsonLd";
 import Window from "@/components/window/Window";
-import { breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
+import { sitePageMetadata } from "@/lib/seo";
+import { getSitePage } from "@/lib/site-pages";
+import { sitePageJsonLd } from "@/lib/page-schema";
 import contact from "./page.module.css";
 
-export const metadata: Metadata = pageMetadata({
-  title: "Contact and Socials",
-  description:
-    "Heres my contact infomation and my socials. If you need or want to reach out for whatever these are the easiest methods!",
-  path: "/contact",
-});
+const info = getSitePage("/contact");
+export const metadata: Metadata = sitePageMetadata(info);
 
 type Link = {
   label: string;
@@ -39,13 +38,14 @@ const links: Link[] = [
 export default function Contact() {
   return (
     <>
-      <JsonLd data={breadcrumbJsonLd([{ name: "Contact", path: "/contact" }])} />
+      <JsonLd data={sitePageJsonLd(info)} />
       <PageHeader title="Contact and Socials.">
         Heres my contact infomation and my socials. If you need or want to
         reach out for whatever these are the easiest methods!
       </PageHeader>
 
       <Window title="Socials" className={styles.contentArea}>
+        <PageBreadcrumbs path={info.path} />
         <p className={contact.intro}>
           Fell free to reachout however you want. NOTE: I am extreamly lazy and
           may not check my socials please be pacient.

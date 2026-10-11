@@ -1,3 +1,4 @@
+import PageBreadcrumbs from "@/components/seo/PageBreadcrumbs";
 import PostSidebar from "@/components/post-sidebar/PostSidebar";
 import { CodeBlock } from "@/components/article/CodeBlock";
 import type { Metadata } from "next";
@@ -6,33 +7,27 @@ import ArticleLayout from "@/components/article/ArticleLayout";
 import Contents from "@/components/article/Contents";
 import DemoPanel from "@/components/article/DemoPanel";
 import JsonLd from "@/components/seo/JsonLd";
-import { breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
+import { sitePageMetadata } from "@/lib/seo";
+import { getSitePage } from "@/lib/site-pages";
+import { sitePageJsonLd } from "@/lib/page-schema";
 import post from "@/components/article/Prose.module.css";
 
-export const metadata: Metadata = pageMetadata({
-  title: "M4cgyvers Archives",
-  description:
-    "How archives.m4cgyver.net works: a one-person web archive that indexes WARC files with Bun and PostgreSQL, serves them through a WireGuard tunnel, and replays them online or right in your browser.",
-  path: "/projects/archives",
-});
+const info = getSitePage("/projects/archives");
+export const metadata: Metadata = sitePageMetadata(info);
 
 const SITE = "https://archives.m4cgyver.net";
 
 export default function ProjectArchives() {
   return (
     <>
-      <JsonLd
-        data={breadcrumbJsonLd([
-          { name: "Projects", path: "/projects" },
-          { name: "Archives", path: "/projects/archives" },
-        ])}
-      />
+      <JsonLd data={sitePageJsonLd(info)} />
       <ArticleHeader title="Archives" description="Preserving the web with WARC files, searchable captures, and browser-based replay." />
 
       {/* Left-hand navigation: in-page table of contents */}
       <PostSidebar resources={[{label:"Live archive",href:SITE,note:"Search and replay saved web captures."},{label:"Offline WARC viewer",href:`${SITE}/warcs/offline`,note:"Open your own WARC files in the browser."}]}><Contents sections={[{"id": "what-it-is", "title": "What It Is", "level": 2}, {"id": "the-big-picture", "title": "The Big Picture", "level": 2}, {"id": "collecting-warcs", "title": "Collecting WARCs", "level": 2}, {"id": "backend", "title": "Backend Stack", "level": 2}, {"id": "bun-api", "title": "The Bun API", "level": 3}, {"id": "postgresql", "title": "PostgreSQL: An Index, Not a Copy", "level": 3}, {"id": "wireguard", "title": "The WireGuard Tunnel", "level": 3}, {"id": "frontend", "title": "Frontend", "level": 2}, {"id": "parser", "title": "The Parser", "level": 2}, {"id": "online-replay", "title": "Replaying a Capture Online", "level": 2}, {"id": "offline-viewer", "title": "The Offline Viewer", "level": 2}, {"id": "downloads", "title": "Downloads", "level": 2}, {"id": "limits", "title": "Limits", "level": 2}]} /></PostSidebar>
 
       <ArticleLayout title="Project notes" summary="A personal web archive built around WARC files, a searchable PostgreSQL index, and browser-based replay. This notebook explains the architecture and its limitations.">
+        <PageBreadcrumbs path={info.path} />
         <p><a href={SITE} target="_blank" rel="noopener noreferrer">Open the live archive ↗</a></p><DemoPanel title="Preview the live archive" href={SITE}><iframe src={SITE} title="Live archive preview" loading="lazy" style={{aspectRatio:"16 / 9"}} /></DemoPanel>
 
         <h2 id="what-it-is">What It Is</h2>

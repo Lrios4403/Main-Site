@@ -14,8 +14,8 @@ export const contentType = "image/png";
 export default async function Image() {
   const [toshiba, floppy, background] = await Promise.all([
     readFile(join(process.cwd(), "public/fonts/Toshiba-TXL1.woff")),
-    // A 6x nearest-neighbor upscale of assets/floppy.png, so it stays crisp
-    readFile(join(process.cwd(), "assets/floppy-384.png"), "base64"),
+    // A 6x nearest-neighbor upscale of public/main/floppy.png, so it stays crisp
+    readFile(join(process.cwd(), "public/main/floppy-384.png"), "base64"),
     readFile(join(process.cwd(), "public/main/bgdark.jpeg"), "base64"),
   ]);
 

@@ -1,3 +1,4 @@
+import PageBreadcrumbs from "@/components/seo/PageBreadcrumbs";
 import PostSidebar from "@/components/post-sidebar/PostSidebar";
 import Contents from "@/components/article/Contents";
 import type { Metadata } from "next";
@@ -7,25 +8,18 @@ import styles from "@/components/main/styles.module.css";
 import JsonLd from "@/components/seo/JsonLd";
 import V86Emulator from "@/components/v86-emulator/V86Emulator";
 import Window from "@/components/window/Window";
-import { breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
+import { sitePageMetadata } from "@/lib/seo";
+import { getSitePage } from "@/lib/site-pages";
+import { sitePageJsonLd } from "@/lib/page-schema";
 import page from "./page.module.css";
 
-export const metadata: Metadata = pageMetadata({
-  title: "Startup OS Online VM",
-  description:
-    "Startup OS, a DOS-like x86 assembly operating system based on MikeOS, running in your browser.",
-  path: "/projects/startupos",
-});
+const info = getSitePage("/projects/startupos");
+export const metadata: Metadata = sitePageMetadata(info);
 
 export default function StartupOS() {
   return (
     <>
-      <JsonLd
-        data={breadcrumbJsonLd([
-          { name: "Projects", path: "/projects" },
-          { name: "Startup OS", path: "/projects/startupos" },
-        ])}
-      />
+      <JsonLd data={sitePageJsonLd(info)} />
       <ArticleHeader title="StartupOS" description="A small DOS-like operating system built in x86 assembly, based on MikeOS. Explore the commands or try it in your browser." />
 
       {/* Left-hand column: credits */}
@@ -33,7 +27,7 @@ export default function StartupOS() {
         <Contents sections={[{id:"overview",title:"Overview",level:2},{id:"browser-demo",title:"Browser demo",level:2},{id:"project-notes",title:"Project notes",level:2},{id:"commands",title:"Commands",level:3}]} />
       </PostSidebar>
 
-      <div className={`${styles.contentArea} ${page.stack}`}><ArticleLayout id="overview" title="Overview" className="" summary="A personal project for learning bootloaders, assembly, and the mechanics of an operating system. Built on MikeOS, with a small command shell and a FAT12 disk."><p><a href="https://github.com/Lrios4403/StartupOS/tree/main" target="_blank" rel="noopener noreferrer">Browse the source on GitHub ↗</a></p></ArticleLayout>
+      <div className={`${styles.contentArea} ${page.stack}`}><ArticleLayout id="overview" title="Overview" className="" summary="A personal project for learning bootloaders, assembly, and the mechanics of an operating system. Built on MikeOS, with a small command shell and a FAT12 disk."><PageBreadcrumbs path={info.path} /><p><a href="https://github.com/Lrios4403/StartupOS/tree/main" target="_blank" rel="noopener noreferrer">Browse the source on GitHub ↗</a></p></ArticleLayout>
         <Window id="browser-demo"
           title={
             <>

@@ -4,10 +4,11 @@ import PageHeader from "@/components/page-header/PageHeader";
 import Sidebar from "@/components/sidebar/Sidebar";
 import Window from "@/components/window/Window";
 
-// Next adds noindex to 404 responses on its own, so this only sets the title
+// Explicit fallback as well as Next's automatic noindex for not-found responses.
 export const metadata: Metadata = {
   title: "Page Not Found",
   description: "This page doesn't exist.",
+  robots: { index: false, follow: true },
 };
 
 // The old site's 404 page, text copied as-is.

@@ -19,21 +19,21 @@ type Slide = {
 
 const slides: Slide[] = [
   {
-    href: "/projects/archives/",
+    href: "/projects/archives",
     image: archives,
     category: "Project",
     title: "Preserving the web",
     description: "Inside Archives, my personal tool for collecting and exploring WARC files.",
   },
   {
-    href: "/blogs/nextjs-ordered-table-layout/",
+    href: "/blogs/nextjs-ordered-table-layout",
     image: nextFlexOrder,
     category: "Development notes",
     title: "A place for everything",
     description: "Making CSS grid areas work across layouts and pages in the Next.js App Router.",
   },
   {
-    href: "/blogs/llms-on-an-intel-npu/",
+    href: "/blogs/llms-on-an-intel-npu",
     image: intelNpu,
     category: "AI experiments",
     title: "Local AI, different silicon",

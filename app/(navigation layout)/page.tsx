@@ -2,24 +2,24 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import introPhoto from "@/public/main/PXL_20230322_080050245.jpeg";
-import azureCredential from "@/public/main/azure-ai-fundamentals.webp";
-import floppy from "@/assets/floppy-384.png";
+import Credentials from "@/components/credentials/Credentials";
+import floppy from "@/public/main/floppy-384.png";
 import styles from "@/components/main/styles.module.css";
 import PageHeader from "@/components/page-header/PageHeader";
 import JsonLd from "@/components/seo/JsonLd";
 import Window from "@/components/window/Window";
-import { homeJsonLd, pageMetadata, site } from "@/lib/seo";
+import { sitePageMetadata } from "@/lib/seo";
+import { getSitePage } from "@/lib/site-pages";
+import { sitePageJsonLd } from "@/lib/page-schema";
 import home from "./page.module.css";
 
-export const metadata: Metadata = pageMetadata({
-  description: site.description,
-  path: "/",
-});
+const info = getSitePage("/");
+export const metadata: Metadata = sitePageMetadata(info);
 
 export default function Home() {
   return (
     <>
-      <JsonLd data={homeJsonLd()} />
+      <JsonLd data={sitePageJsonLd(info)} />
       <PageHeader title="M4cgyvers Repurposed Mining Rig!">
         Software, hardware, and a little creative reuse. A personal workshop by Logan Rios.
       </PageHeader>
@@ -33,10 +33,10 @@ export default function Home() {
           <div className={home.overviewBody}>
             <Image src={floppy} alt="" aria-hidden="true" className={home.floppy} sizes="80px" />
             <p className={home.eyebrow}>Logan Rios <span>/ M4cgyver</span></p>
-            <h1 id="about-heading" className={home.heading}>
+            <h2 id="about-heading" className={home.heading}>
               Curious about how it works.<br />
               <span>Happiest building it.</span>
-            </h1>
+            </h2>
             <p className={home.summary}>
               I’m a California native who enjoys building software, exploring computer
               systems, and finding new uses for old hardware. My curiosity takes me from
@@ -64,8 +64,8 @@ export default function Home() {
               I enjoy connecting software and hardware in unexpected ways.
             </p>
             <div className={home.actions}>
-              <Link href="/projects/" className={home.primaryLink}>Explore my projects <span aria-hidden="true">↗</span></Link>
-              <Link href="/contact/" className={home.textLink}>Get in touch <span aria-hidden="true">→</span></Link>
+              <Link href="/projects" className={home.primaryLink}>Explore my projects <span aria-hidden="true">↗</span></Link>
+              <Link href="/contact" className={home.textLink}>Get in touch <span aria-hidden="true">→</span></Link>
             </div>
           </div>
           <ul className={home.interests} aria-label="Interests">
@@ -76,19 +76,7 @@ export default function Home() {
         </Window>
 
         <Window title="Credentials" className={home.detailWindow} bodyStyle={{ padding: 0 }}>
-          <figure className={home.credential}>
-            <a href="/main/azure-ai-fundamentals.webp" target="_blank" rel="noopener noreferrer" aria-label="Open the full-size Azure AI Fundamentals certificate">
-              <Image src={azureCredential} alt="Logan Rios — Microsoft Certified: Azure AI Fundamentals, earned July 30, 2026" sizes="(max-width: 768px) 90vw, 800px" />
-            </a>
-            <figcaption>
-              <div>
-                <p className={home.kicker}>Microsoft Certified</p>
-                <h2 className={home.sectionHeading}>Azure AI Fundamentals</h2>
-                <p className={home.copy}>Earned July 30, 2026</p>
-              </div>
-              <a href="https://learn.microsoft.com/en-us/users/loganrios-6430/credentials/certification/azure-ai-fundamentals" target="_blank" rel="noopener noreferrer" className={home.textLink}>View credential <span aria-hidden="true">↗</span></a>
-            </figcaption>
-          </figure>
+          <Credentials />
         </Window>
 
         <div className={home.details}>
@@ -101,18 +89,18 @@ export default function Home() {
                 beneath the surface.
               </p>
               <div className={home.projectList}>
-                <Link href="/projects/startupos/" className={home.project}>
+                <Link href="/projects/startupos" className={home.project}>
                   <span className={home.projectNumber} aria-hidden="true">01</span>
                   <span><strong>StartupOS</strong><span className={home.projectDescription}>An x86 operating system you can boot in your browser.</span></span>
                   <span className={home.arrow} aria-hidden="true">↗</span>
                 </Link>
-                <Link href="/projects/archives/" className={home.project}>
+                <Link href="/projects/archives" className={home.project}>
                   <span className={home.projectNumber} aria-hidden="true">02</span>
                   <span><strong>Web Archives</strong><span className={home.projectDescription}>A personal tool for preserving and exploring the web.</span></span>
                   <span className={home.arrow} aria-hidden="true">↗</span>
                 </Link>
               </div>
-              <Link href="/blogs/" className={home.textLink}>Read my notes on the process <span aria-hidden="true">→</span></Link>
+              <Link href="/blogs" className={home.textLink}>Read my notes on the process <span aria-hidden="true">→</span></Link>
             </div>
           </Window>
 

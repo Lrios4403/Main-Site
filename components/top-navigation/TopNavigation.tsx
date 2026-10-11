@@ -7,10 +7,10 @@ import Link from "next/link";
 
 const links = [
   { href: "/", label: "Homepage" },
-  { href: "/contact/", label: "Contact / Socials" },
-  { href: "/games/", label: "Movies / Games" },
-  { href: "/blogs/", label: "Blog Postings" },
-  { href: "/projects/", label: "Projects" },
+  { href: "/contact", label: "Contact / Socials" },
+  { href: "/games", label: "Movies / Games" },
+  { href: "/blogs", label: "Blog Postings" },
+  { href: "/projects", label: "Projects" },
 ];
 
 // Keep the parent section highlighted on project detail pages and blog posts.

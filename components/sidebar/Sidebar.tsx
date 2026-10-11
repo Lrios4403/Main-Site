@@ -89,17 +89,17 @@ export default function Sidebar({ trackViews = true, showNavigation = true }: { 
             </Link>
           </li>
           <li>
-            <Link className={styles.navLink} href="/contact/">
+            <Link className={styles.navLink} href="/contact">
               Contact / Socials
             </Link>
           </li>
           <li>
-            <Link className={styles.navLink} href="/games/">
+            <Link className={styles.navLink} href="/games">
               Movies / Games
             </Link>
           </li>
           <li>
-            <Link className={styles.navLink} href="/blogs/">
+            <Link className={styles.navLink} href="/blogs">
               Blog Postings
             </Link>
             <ul className={styles.list}>
@@ -116,7 +116,7 @@ export default function Sidebar({ trackViews = true, showNavigation = true }: { 
             </ul>
           </li>
           <li>
-            <Link className={styles.navLink} href="/projects/">
+            <Link className={styles.navLink} href="/projects">
               Projects
             </Link>
             <ul className={styles.list}>

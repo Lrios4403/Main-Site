@@ -1,24 +1,23 @@
+import PageBreadcrumbs from "@/components/seo/PageBreadcrumbs";
 import type { Metadata } from "next";
 import styles from "@/components/main/styles.module.css";
 import PageHeader from "@/components/page-header/PageHeader";
 import JsonLd from "@/components/seo/JsonLd";
 import Window from "@/components/window/Window";
-import { breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
+import { sitePageMetadata } from "@/lib/seo";
+import { getSitePage } from "@/lib/site-pages";
+import { sitePageJsonLd } from "@/lib/page-schema";
 import games from "./page.module.css";
 
-export const metadata: Metadata = pageMetadata({
-  title: "General Good Entertainment",
-  description:
-    "Games and movies I make will show up here. Nothing's published yet, so check back later!",
-  path: "/games",
-});
+const info = getSitePage("/games");
+export const metadata: Metadata = sitePageMetadata(info);
 
 // Nothing's published yet, so the page is a retro "coming soon" screen: a
 // DOS prompt that can't find any games, then an arcade attract screen.
 export default function Games() {
   return (
     <>
-      <JsonLd data={breadcrumbJsonLd([{ name: "Games", path: "/games" }])} />
+      <JsonLd data={sitePageJsonLd(info)} />
       <PageHeader title="General Good Entertainment">
         Games and movies I make will show up here. Nothing&apos;s published
         yet, so check back later!
@@ -29,6 +28,7 @@ export default function Games() {
         className={`${styles.contentArea} ${styles.fillContent}`}
         bodyStyle={{ padding: 12 }}
       >
+        <PageBreadcrumbs path={info.path} />
         <div className={games.screen}>
           <pre className={games.terminal}>{`C:\\GAMES> dir
  Volume in drive C is ENTERTAINMENT

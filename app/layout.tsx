@@ -134,11 +134,10 @@ export default function RootLayout({
                   </p>
                 </div>
                 <nav className={styles.footerLinks} aria-label="Footer">
-                  {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- the site uses plain <a> links throughout */}
                   <Link href="/">Home</Link>
-                  <Link href="/blogs/">Blog</Link>
-                  <Link href="/projects/">Projects</Link>
-                  <Link href="/contact/">Contact</Link>
+                  <Link href="/blogs">Blog</Link>
+                  <Link href="/projects">Projects</Link>
+                  <Link href="/contact">Contact</Link>
                 </nav>
               </div>
             </Window>
