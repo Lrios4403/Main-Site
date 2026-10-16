@@ -1,3 +1,4 @@
+import SiteLayout from "@/components/site-layout/SiteLayout";
 import PageBreadcrumbs from "@/components/seo/PageBreadcrumbs";
 import PostSidebar from "@/components/post-sidebar/PostSidebar";
 import { CodeBlock } from "@/components/article/CodeBlock";
@@ -19,7 +20,7 @@ const SITE = "https://archives.m4cgyver.net";
 
 export default function ProjectArchives() {
   return (
-    <>
+    <SiteLayout variant="detail">
       <JsonLd data={sitePageJsonLd(info)} />
       <ArticleHeader title="Archives" description="Preserving the web with WARC files, searchable captures, and browser-based replay." />
 
@@ -673,6 +674,6 @@ Content-Type: text/html
           </li>
         </ul>
       </ArticleLayout>
-    </>
+    </SiteLayout>
   );
 }

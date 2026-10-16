@@ -20,7 +20,7 @@ export default function PageHeader({ title, children }: PageHeaderProps) {
       bodyStyle={{ position: "relative", padding: "12px 16px 14px" }}
     >
       <div className={styles.headerText}>
-        <h2 className={styles.brand}>{title}</h2>
+        <h1 className={styles.brand}>{title}</h1>
         <p className={styles.headerWelcome}>{children}</p>
       </div>
       <PizzaCube />

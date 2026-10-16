@@ -58,7 +58,7 @@ Windows sandbox permissions prevented an initial build and localhost connection;
 ## Adding another post
 
 1. Add a typed record in `lib/posts.ts` with stable slug/path, author, authentic dates, summary and sections. Leave cover/updated absent when not applicable. Related slugs must be explicitly approved published articles.
-2. Create the existing-style static `app/(no navigation layout)/blogs/<slug>/page.tsx` route. Export `buildPostMetadata(getPost(slug))`; render the body inside ArticleShell. Keep commands and special content in TSX.
+2. Create the existing-style static `app/blogs/<slug>/page.tsx` route. Export `buildPostMetadata(getPost(slug))`; render the body inside ArticleShell within `SiteLayout variant="detail"`. Keep commands and special content in TSX.
 3. Use explicit heading IDs matching the manifest. Do not rename published anchors without retaining old destinations.
 4. Run the unit tests, localhost audit, typecheck, lint and build. Inspect desktop/mobile, images and keyboard navigation.
 5. The published registry automatically supplies the index and sitemap. Draft metadata is noindex/nofollow; a static draft route is still publicly accessible if deployed, so keep confidential drafts out of deployed routes entirely.

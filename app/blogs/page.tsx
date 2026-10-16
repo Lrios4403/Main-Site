@@ -1,3 +1,4 @@
+import SiteLayout from "@/components/site-layout/SiteLayout";
 import PageBreadcrumbs from "@/components/seo/PageBreadcrumbs";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -17,7 +18,7 @@ export const metadata: Metadata = sitePageMetadata(info);
 // The posts themselves are listed in lib/posts.ts
 export default function BlogList() {
   return (
-    <>
+    <SiteLayout variant="index">
       <JsonLd data={sitePageJsonLd(info)} />
       <PageHeader title="M4cgyvers Bountifull Blog Posts.">
         Experiments, practical guides, and lessons from building software.
@@ -61,6 +62,6 @@ export default function BlogList() {
           </ul>
         )}
       </Window>
-    </>
+    </SiteLayout>
   );
 }

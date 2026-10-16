@@ -1,3 +1,4 @@
+import SiteLayout from "@/components/site-layout/SiteLayout";
 import PageBreadcrumbs from "@/components/seo/PageBreadcrumbs";
 import type { Metadata } from "next";
 import styles from "@/components/main/styles.module.css";
@@ -16,7 +17,7 @@ export const metadata: Metadata = sitePageMetadata(info);
 // DOS prompt that can't find any games, then an arcade attract screen.
 export default function Games() {
   return (
-    <>
+    <SiteLayout variant="index">
       <JsonLd data={sitePageJsonLd(info)} />
       <PageHeader title="General Good Entertainment">
         Games and movies I make will show up here. Nothing&apos;s published
@@ -57,6 +58,6 @@ File Not Found
           show up here.
         </p>
       </Window>
-    </>
+    </SiteLayout>
   );
 }

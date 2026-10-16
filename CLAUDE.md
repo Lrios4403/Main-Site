@@ -25,12 +25,15 @@ bunx eslint app components lib   # lint (see below for why not `bun run lint`)
 
 ## Layout model
 
-- `app/layout.tsx` renders the whole page chrome: a fixed background image, a grain overlay, a centered container whose height follows the content, and a CSS grid that already holds the slideshow and the footer. Pages render directly into that grid, so a page returns a fragment of grid children, not a full layout.
+- `app/layout.tsx` renders the whole page chrome: a fixed background image, a grain overlay, a centered container whose height follows the content, and a CSS grid that holds page chrome and the footer. Pages render directly into that grid, and SiteLayout returns a fragment of grid children.
 - The grid is defined in `components/main/styles.module.css` with the template areas `header`, `slideshow`, `navigation-lhs`, `content` and `footer`. When the grid contains the top navigation bar, a `:has()` rule adds a `topnav` row under the header. Pages place each child into an area by passing the matching class: `styles.header`, `styles.navLhs` or `styles.contentArea`. Below 768px the grid collapses to a single column.
-- Three route groups decide who fills the nav area:
-  - The homepage under `app/(navigation layout)/` gets the slideshow and `components/sidebar/Sidebar.tsx` from that group's `layout.tsx`: the site navigation, the "Views" counter and the "Frens and Interests" 88x31 buttons, stacked in the nav area.
-  - The `/projects`, `/contact`, `/games`, and `/blogs` index pages live under `app/(top navigation layout)/`, which renders `TopNavigation` and `Sidebar showNavigation={false}`. Only the sidebar Navigation window is hidden; Views and Frens remain. The sidebar owns view tracking. These pages have no slideshow. Detail pages under `app/(no navigation layout)/` render their own `styles.navLhs` block. The blog post puts an in-page table of contents of `#anchor` links there. That group's `layout.tsx` adds the old site's horizontal bar (`components/top-navigation/`) for site navigation, plus a tracking pixel.
-  - `app/not-found.tsx` sits outside both groups, so it renders `<Sidebar trackViews={false} />` itself, so 404s aren't counted.
+- All routes now live in ordinary folders (`app/page.tsx`, `app/blogs`, `app/projects`, `app/contact`, `app/games`). There are no navigation route groups.
+- `components/site-layout/SiteLayout.tsx` is a shared Server Component explicitly selected by each page:
+  - `variant="home"`: slideshow, full sidebar (navigation, Views, Frens), then page content.
+  - `variant="index"`: top navigation, sidebar with only Views and Frens, then page content.
+  - `variant="detail"`: top navigation, page content with its own author/resources/TOC sidebar, then one tracking pixel.
+- SiteLayout returns a fragment so existing CSS grid placement is preserved. It does not inspect the pathname or turn page content into client components. Sidebar's ViewCounter owns tracking on home/index; only details receive the standalone ViewPixel. Do not add a second tracker.
+- `app/not-found.tsx` keeps its own untracked sidebar and does not use SiteLayout, so unknown routes do not count as visits.
 - `components/window/Window.tsx` is the one shared UI primitive: a frosted-glass panel with an optional gradient title bar. Use `className` to set its grid area and `bodyStyle` to override its padding.
 - Most pages build their header window with `components/page-header/PageHeader.tsx`, which adds the spinning pizza cube (`components/pizza-cube/`, plays `public/sounds/boom.mp3` on click). The blog post still writes its header `Window` by hand.
 - The look and most of the text come from the 2023 site at m4cgyver.net (Wayback capture of 2023-10-29). CSS comments saying "copied from old site" point at that version.
@@ -65,10 +68,10 @@ bunx eslint app components lib   # lint (see below for why not `bun run lint`)
 All content is hardcoded:
 
 - Blog posts are listed in `lib/posts.ts` (slug, title, description, `published`/`updated` dates, tags). The blog index, the sitemap, each post's metadata and its JSON-LD all read from it.
-- Each post is its own hand-written static route at `app/(no navigation layout)/blogs/<slug>/page.tsx`. To add a post, add an entry to `lib/posts.ts` and create the route folder. The page calls `getPost(slug)`, exports `postMetadata(info)`, renders `<JsonLd data={postJsonLd(info)} />`, and wraps its table of contents in `components/post-sidebar/PostSidebar.tsx`. The sidebar adds the "Post Info" window (author, published and last-updated dates) and a "Resources" window of the post's external links, and keeps the table of contents sticky.
+- Each post is its own hand-written static route at `app/blogs/<slug>/page.tsx`. To add a post, add an entry to `lib/posts.ts` and create the route folder. The page calls `getPost(slug)`, exports `postMetadata(info)`, renders `<JsonLd data={postJsonLd(info)} />`, and wraps its table of contents in `components/post-sidebar/PostSidebar.tsx`. The sidebar adds the "Post Info" window (author, published and last-updated dates) and a "Resources" window of the post's external links, and keeps the table of contents sticky.
 - When a post's content changes, set its `updated` date. The visible "Last updated" date and the JSON-LD `dateModified` both come from that field.
 - The slideshow cards are a `slides` array in `components/slideshow/Slideshow.tsx` (the image is optional), and the 88x31 buttons are a `frens` array in `components/sidebar/Sidebar.tsx`. Card text is sized in container-query units (`cqi`), so it scales with the card instead of getting cut off.
-- Internal links are plain `<a>` tags with trailing slashes (`/blogs/`, `/contact/`). `@next/next/no-html-link-for-pages` flags a literal `href="/"`, so links to the home page carry an eslint-disable comment.
+- Internal page navigation uses Next.js Link and canonical paths. External sites, files and same-page anchors use regular anchors.
 - Unknown routes land on the 404 page (`app/not-found.tsx`). The old site's friend pages (Bic, Casmier, Cookie, Neo) were left out on purpose.
 
 ## SEO
@@ -76,16 +79,15 @@ All content is hardcoded:
 - `lib/seo.ts` holds the site settings, including the canonical domain `https://m4cgyver.net`. It's used as `metadataBase` and as the base for every absolute URL.
 - The root layout sets the defaults and a title template, `%s | M4cgyver`. Every page builds its metadata with `pageMetadata({ title, description, path })`, which sets the canonical URL and a full Open Graph block. Omit `title` to get the bare site name, as the home page does.
 - Metadata merges shallowly: a page's `openGraph` replaces the root's completely. That's why `pageMetadata` lists `/opengraph-image` itself instead of relying on the file convention.
-- Twitter metadata isn't set per page. Next fills the twitter title, description and image in from Open Graph, and the root sets `summary_large_image`.
+- Static pages set explicit Twitter metadata with the branded share image. Articles use a summary card unless a real cover is declared.
 - JSON-LD is rendered with `components/seo/JsonLd.tsx`:
-  - the home page renders WebSite and Person (`homeJsonLd`);
-  - every other page renders a `breadcrumbJsonLd` trail;
-  - posts render BlogPosting plus breadcrumbs (`postJsonLd`).
-- `app/sitemap.ts` lists the routes and pulls the posts from `lib/posts.ts`. Add new non-post pages there by hand. `app/robots.ts` allows everything except `/api/`.
+  - static pages use `sitePageJsonLd`, including WebSite and Person on the homepage and breadcrumbs on other pages;
+  - ArticleShell renders BlogPosting plus breadcrumbs with `buildPostJsonLd`.
+- `app/sitemap.ts` combines `lib/site-pages.ts` with published posts from `lib/posts.ts`. Add new static public pages to the shared registry. `app/robots.ts` allows everything except `/api/`.
 - Icons:
-  - `app/favicon.ico`, `icon.png` and `apple-icon.png` are generated from `assets/floppy.png`, a 64x64 floppy disk.
+  - `app/favicon.ico`, `icon.png` and `apple-icon.png` are generated from `public/main/floppy.png`, a 64x64 floppy disk.
   - The `.ico` holds smooth downscales; nearest-neighbor turns the 16 and 32px sizes into noise. The PNGs are crisp nearest-neighbor upscales.
-- `app/opengraph-image.tsx` renders the 1200x630 share image: the "Title" window, `assets/floppy-384.png` on the left and the site name in the Toshiba font on the right. It reads its files with `readFile` from `process.cwd()`.
+- `app/opengraph-image.tsx` renders the 1200x630 share image: the "Title" window, `public/main/floppy-384.png` on the left and the site name in the Toshiba font on the right. It reads its files with `readFile` from `process.cwd()`.
 
 ## Deployment
 
@@ -114,7 +116,7 @@ When you add a component to the design system, update both `entry.tsx` and `comp
 - Covers are optional real local assets with dimensions, informative alt text and captions. ArticleFigure renders them. Do not label generic slideshow artwork as evidence or invent representative screenshots. Coverless articles omit BlogPosting.image and use a Twitter summary card. Next's root file-based OG image may still supply branded share art.
 - Related links are explicitly curated published slugs, not automatic crosslinks. No current related pair is declared between the unrelated CSS and Intel posts.
 - SEO builders/registry use the `server-only` marker. Bun test preload mocks only that marker; the standalone localhost audit uses a dedicated preload to run server modules outside Next.
-- Run `bun run test:seo`, `bun run check:seo [http://localhost:PORT]`, typecheck, targeted lint and a build. The audit fetches only registered article routes, index, robots, sitemap and declared cover assets. Never execute published commands or crawl localhost URLs embedded in article examples.
+- Run `bun run test:seo`, `bun run check:seo [http://localhost:PORT]`, typecheck, targeted lint and a build. The audit covers registered articles and static pages, robots, sitemap, declared cover assets, the local branded share image, and one fixed missing route for HTTP 404/noindex. Never execute published commands or crawl localhost URLs embedded in article examples.
 - Intel-only editorial evidence stays in its route's SetupNotes.tsx. Unrecorded versions and hardware results must remain unclaimed. Companion templates in docs/examples/intel-npu are local review material, not a published companion project.
 
 ## Site-wide page SEO

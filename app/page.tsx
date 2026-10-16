@@ -1,3 +1,4 @@
+import SiteLayout from "@/components/site-layout/SiteLayout";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -18,7 +19,7 @@ export const metadata: Metadata = sitePageMetadata(info);
 
 export default function Home() {
   return (
-    <>
+    <SiteLayout variant="home">
       <JsonLd data={sitePageJsonLd(info)} />
       <PageHeader title="M4cgyvers Repurposed Mining Rig!">
         Software, hardware, and a little creative reuse. A personal workshop by Logan Rios.
@@ -123,6 +124,6 @@ export default function Home() {
           </Window>
         </div>
       </section>
-    </>
+    </SiteLayout>
   );
 }

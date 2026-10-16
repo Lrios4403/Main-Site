@@ -13,10 +13,27 @@ import type { PostRecord } from "../../lib/blog/types";
 import { checkPostHtml } from "./html";
 import sitemap from "../../app/sitemap";
 import { checkMedia } from "./media";
+import { checkSiteHtml } from "./site-html";
+import { getSitePage } from "../../lib/site-pages";
+import { sitePageJsonLd } from "../../lib/page-schema";
 
 const fixture = (changes: Partial<PostRecord> = {}): PostRecord => ({ ...structuredClone(postRegistry[0]), ...changes });
 const today = "2026-10-11";
 const escape = (text: string) => text.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;");
+test("static page audit accepts normalized home URLs and rejects missing H1/noindex", () => {
+  const page = getSitePage("/");
+  const html = `<html lang="en"><head><title>${escape(page.title)}</title>
+    <meta name="description" content="${escape(page.description)}">
+    <link rel="canonical" href="https://m4cgyver.net">
+    <meta property="og:url" content="https://m4cgyver.net"><meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image"><meta name="robots" content="index, follow">
+    </head><body><main><h1>Home</h1>
+    <script type="application/ld+json">${JSON.stringify(sitePageJsonLd(page))}</script></main></body></html>`;
+  expect(() => checkSiteHtml(html, page)).not.toThrow();
+  expect(() => checkSiteHtml(html.replace("<h1>Home</h1>", "<h2>Home</h2>"), page)).toThrow("one H1");
+  expect(() => checkSiteHtml(html.replace("index, follow", "noindex, follow"), page)).toThrow("noindex");
+  expect(() => checkSiteHtml(html.replace('rel="canonical"', 'rel="alternate"'), page)).toThrow("canonical");
+});
 function fixtureHtml(post: PostRecord) {
   return `<html><head><title>${escape(post.title)} | M4cgyver</title>
     <meta name="description" content="${escape(post.description)}">
@@ -50,7 +67,7 @@ describe("calendar dates", () => {
 describe("registry", () => {
   test("all real routes are covered and valid", () => {
     validatePosts(postRegistry, new Date().toISOString().slice(0, 10));
-    const routes = readdirSync("app/(no navigation layout)/blogs", { withFileTypes: true }).filter(item => item.isDirectory()).map(item => item.name).sort();
+    const routes = readdirSync("app/blogs", { withFileTypes: true }).filter(item => item.isDirectory()).map(item => item.name).sort();
     expect(postRegistry.map(post => post.slug).sort()).toEqual(routes);
     expect(getPublishedPosts().map(post => post.slug)).toEqual(["nextjs-ordered-table-layout", "llms-on-an-intel-npu"]);
   });
@@ -136,7 +153,7 @@ describe("HTML audit rejects regressions", () => {
 });
 
 test("Intel examples keep model identifiers and Windows CMD continuations", () => {
-  const source = readFileSync(join("app/(no navigation layout)/blogs", "llms-on-an-intel-npu/page.tsx"), "utf8");
+  const source = readFileSync(join("app/blogs", "llms-on-an-intel-npu/page.tsx"), "utf8");
   expect(source).toContain("--source_model OpenVINO/Qwen3-8B-int4-cw-ov ^");
   expect(source).toContain("--model_name Qwen3-8B ^");
   expect(source).toContain("--target_device NPU ^");

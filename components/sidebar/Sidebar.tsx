@@ -104,12 +104,12 @@ export default function Sidebar({ trackViews = true, showNavigation = true }: { 
             </Link>
             <ul className={styles.list}>
               <li>
-                <Link className={styles.navLink} href="/blogs/nextjs-ordered-table-layout/">
+                <Link className={styles.navLink} href="/blogs/nextjs-ordered-table-layout">
                   Ordered Table Layout
                 </Link>
               </li>
               <li>
-                <Link className={styles.navLink} href="/blogs/llms-on-an-intel-npu/">
+                <Link className={styles.navLink} href="/blogs/llms-on-an-intel-npu">
                   LLMs on an Intel NPU
                 </Link>
               </li>
@@ -121,12 +121,12 @@ export default function Sidebar({ trackViews = true, showNavigation = true }: { 
             </Link>
             <ul className={styles.list}>
               <li>
-                <Link className={styles.navLink} href="/projects/archives/">
+                <Link className={styles.navLink} href="/projects/archives">
                   Archives
                 </Link>
               </li>
               <li>
-                <Link className={styles.navLink} href="/projects/startupos/">
+                <Link className={styles.navLink} href="/projects/startupos">
                   StartupOS
                 </Link>
               </li>

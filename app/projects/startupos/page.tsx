@@ -1,3 +1,4 @@
+import SiteLayout from "@/components/site-layout/SiteLayout";
 import PageBreadcrumbs from "@/components/seo/PageBreadcrumbs";
 import PostSidebar from "@/components/post-sidebar/PostSidebar";
 import Contents from "@/components/article/Contents";
@@ -18,7 +19,7 @@ export const metadata: Metadata = sitePageMetadata(info);
 
 export default function StartupOS() {
   return (
-    <>
+    <SiteLayout variant="detail">
       <JsonLd data={sitePageJsonLd(info)} />
       <ArticleHeader title="StartupOS" description="A small DOS-like operating system built in x86 assembly, based on MikeOS. Explore the commands or try it in your browser." />
 
@@ -86,6 +87,6 @@ export default function StartupOS() {
           <span className={page.notification}>You can download the source code on <a href="https://github.com/Lrios4403/StartupOS/tree/main" target="_blank" rel="noopener noreferrer">GitHub</a>.</span>
         </ArticleLayout>
       </div>
-    </>
+    </SiteLayout>
   );
 }

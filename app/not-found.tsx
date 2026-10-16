@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import styles from "@/components/main/styles.module.css";
 import PageHeader from "@/components/page-header/PageHeader";
 import Sidebar from "@/components/sidebar/Sidebar";
@@ -21,7 +22,12 @@ export default function NotFound() {
       </PageHeader>
       <Sidebar trackViews={false} />
       <Window title="404 Page Not Found!" className={styles.contentArea}>
-        {null}
+        <p>The page may have moved, or the address may be incorrect.</p>
+        <ul className={styles.list}>
+          <li><Link href="/">Return to the homepage</Link></li>
+          <li><Link href="/blogs">Browse blog posts</Link></li>
+          <li><Link href="/projects">Explore projects</Link></li>
+        </ul>
       </Window>
     </>
   );

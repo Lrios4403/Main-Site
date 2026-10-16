@@ -1,3 +1,4 @@
+import SiteLayout from "@/components/site-layout/SiteLayout";
 import PageBreadcrumbs from "@/components/seo/PageBreadcrumbs";
 import type { Metadata } from "next";
 import styles from "@/components/main/styles.module.css";
@@ -37,7 +38,7 @@ const links: Link[] = [
 
 export default function Contact() {
   return (
-    <>
+    <SiteLayout variant="index">
       <JsonLd data={sitePageJsonLd(info)} />
       <PageHeader title="Contact and Socials.">
         Heres my contact infomation and my socials. If you need or want to
@@ -73,6 +74,6 @@ export default function Contact() {
           ))}
         </ul>
       </Window>
-    </>
+    </SiteLayout>
   );
 }

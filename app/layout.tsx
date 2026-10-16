@@ -110,7 +110,7 @@ export default function RootLayout({
         {/* Grainy noise overlay (sits on top of the image) */}
         <div className={styles.grainOverlay} aria-hidden="true" />
 
-        {/* Container locks the grid to a 4:3 aspect ratio */}
+        {/* Viewport-height grid grows with content and keeps the footer below it */}
         <div className={styles.gridContainer}>
           <div className={styles.grid}>
              

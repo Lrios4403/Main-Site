@@ -1,3 +1,4 @@
+import SiteLayout from "@/components/site-layout/SiteLayout";
 import { QuickStart, FirstDownload, VerificationNotes } from "./SetupNotes";
 import { CodeBlock } from "@/components/article/CodeBlock";
 import type { Metadata } from "next";
@@ -13,6 +14,7 @@ export const metadata: Metadata = buildPostMetadata(info);
 
 export default function BlogOpenVINOModelServerSetup() {
   return (
+    <SiteLayout variant="detail">
     <ArticleShell post={info}>
         <QuickStart />
 
@@ -945,5 +947,6 @@ Intel AI Boost NPU`} />
         </p>
         <VerificationNotes />
     </ArticleShell>
+    </SiteLayout>
   );
 }

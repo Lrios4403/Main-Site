@@ -1,3 +1,4 @@
+import SiteLayout from "@/components/site-layout/SiteLayout";
 import type { Metadata } from "next";
 import DemoPanel from "@/components/article/DemoPanel";
 import { getPost } from "@/lib/posts";
@@ -35,6 +36,7 @@ export const metadata: Metadata = buildPostMetadata(info);
 
 export default function BlogNextJSOrderedTableLayout() {
   return (
+    <SiteLayout variant="detail">
     <ArticleShell post={info}>
         <h2 id="abstract">Abstract</h2>
         <p>
@@ -298,5 +300,6 @@ export default function BlogNextJSOrderedTableLayout() {
         </p>
         <CodeBlock kind="command" code={runProjectExample} language="bash" />
       </ArticleShell>
+    </SiteLayout>
   );
 }
