@@ -122,26 +122,6 @@ export const basicGridTemplateExample = `
 </body>
 </html>
 `
-export const projectStructure = `
-lib/
-└── styles.module.css       -- the grid container and one class per named area
-components/
-└── page-views/
-    ├── PageViews.tsx       -- the views box each page places in the stats area
-    └── styles.module.css   -- how the views box looks
-app/
-├── globals.css             -- base styles for the whole site
-├── layout.tsx              -- the grid container, header, footer, navigation and filler
-├── page.tsx                -- the home page's content area and page views
-├── page.module.css         -- how the home page's content looks
-├── about/
-│   ├── page.tsx            -- the about page's content area and page views
-│   └── page.module.css     -- how the about page's content looks
-└── contact/
-    ├── page.tsx            -- the contact page's content area and page views
-    └── page.module.css     -- how the contact page's content looks
-`
-
 export const gridStylesExample = `
 /* The shared grid container. It defines the grid-template-areas for the
 /* whole app. The header and footer span the full width, while the left

@@ -1,6 +1,42 @@
+import FileTree from "@/components/article/FileTree";
 import GridAreasDiagram from "@/components/article/charts/GridAreasDiagram";
 
-// The post's grids, drawn from the same grid-template-areas the CSS uses.
+// The post's grids, drawn from the same grid-template-areas the CSS uses,
+// and the example project's files.
+
+export function ProjectTree() {
+  return (
+    <FileTree
+      title="Project structure"
+      legend={{ layout: "renders the shared areas", page: "renders its own areas" }}
+      nodes={[
+        { name: "lib", children: [
+          { name: "styles.module.css", href: "#the-grid-container", note: "the grid container and one class per named area" },
+        ] },
+        { name: "components", children: [
+          { name: "page-views", children: [
+            { name: "PageViews.tsx", href: "#the-page-component", tone: "page", note: "the views box each page places in the stats area" },
+            { name: "styles.module.css", href: "#the-page-component", note: "how the views box looks" },
+          ] },
+        ] },
+        { name: "app", children: [
+          { name: "globals.css", href: "#global-styles", note: "base styles for the whole site" },
+          { name: "layout.tsx", href: "#the-root-layout", tone: "layout", note: "the grid container, header, footer, navigation and filler" },
+          { name: "page.tsx", href: "#the-home-page", tone: "page", note: "the home page's content and page views" },
+          { name: "page.module.css", href: "#the-home-page", note: "how the home page's content looks" },
+          { name: "about", children: [
+            { name: "page.tsx", href: "#the-about-page", tone: "page", note: "the about page's content and page views" },
+            { name: "page.module.css", href: "#the-about-page", note: "how the about page's content looks" },
+          ] },
+          { name: "contact", children: [
+            { name: "page.tsx", href: "#the-contact-page", tone: "page", note: "the contact page's content and page views" },
+            { name: "page.module.css", href: "#the-contact-page", note: "how the contact page's content looks" },
+          ] },
+        ] },
+      ]}
+    />
+  );
+}
 
 export function HtmlGridDiagram() {
   return (

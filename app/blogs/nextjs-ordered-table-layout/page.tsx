@@ -22,11 +22,10 @@ import {
   movingAreaExample,
   pageViewsExample,
   pageViewsStylesExample,
-  projectStructure,
   rootLayoutExample,
   runProjectExample,
 } from "./blob";
-import { AddAreaDiagram, HtmlGridDiagram, MoveAreaDiagram, NextGridDiagram, htmlGridText, nextGridText } from "./diagrams";
+import { AddAreaDiagram, HtmlGridDiagram, MoveAreaDiagram, NextGridDiagram, ProjectTree, htmlGridText, nextGridText } from "./diagrams";
 
 // Title, description, dates, tags and the section list live in lib/posts.ts.
 // The code examples in blob.ts are the example repository's files, verbatim.
@@ -151,7 +150,7 @@ export default function BlogNextJSOrderedTableLayout() {
           The project is built with Next.js 16 and React 19, and styled with CSS Modules only. These are the files that
           matter:
         </p>
-        <CodeBlock kind="diagram" label="Project structure" code={projectStructure.trim()} />
+        <ProjectTree />
 
         <h3 id="the-grid-container">The grid container</h3>
         <p>

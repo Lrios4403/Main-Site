@@ -1,0 +1,55 @@
+/* A file tree in the code-block style: same frame and title bar as CodeBlock.
+   Selectors are two classes deep so they outrank the article's ul/li/a/p
+   rules (Prose.module.css, one class plus an element). */
+.tree { margin: 18px 0; border: 1px solid #8cc5e833; border-radius: 6px; overflow: hidden; background: #070f1e; }
+.tree .toolbar {
+  padding: 8px 12px;
+  border-bottom: 1px solid #8cc5e826;
+  background: linear-gradient(90deg, #163876, #165279);
+  box-shadow: inset 1px 1px #ffffff14;
+  color: #d6ebff;
+  font: 12px/1.5 var(--font-toshiba), monospace;
+}
+.tree .body { padding: 12px 16px 14px; overflow-x: auto; }
+
+.tree .list { margin: 0; padding: 0; list-style: none; }
+/* Nested levels: indented, with a faint guide line down the side */
+.tree .list .list { margin: 2px 0 2px 6px; padding-left: 14px; border-left: 1px dashed rgba(140, 197, 232, 0.25); }
+.tree .item { margin: 0; padding: 0; }
+.tree .item::marker { content: none; }
+
+.tree .folderName {
+  width: fit-content;
+  cursor: pointer;
+  list-style: none;
+  color: #d6ebff;
+  font: 600 13px/1.9 var(--font-geist-mono), monospace;
+}
+.tree .folderName::-webkit-details-marker { display: none; }
+.tree .folderName::before { content: "▸"; display: inline-block; width: 1.1em; color: #8cc5e8; }
+.tree .folder[open] > .folderName::before { content: "▾"; }
+.tree .folderName:focus-visible { outline: 2px solid #a6e7d6; outline-offset: 2px; border-radius: 2px; }
+
+/* A file: its name, then what it does; on a narrow screen the note wraps under the name */
+.tree .file { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 14px; padding: 1px 0; }
+.tree .name { font: 13px/1.9 var(--font-geist-mono), monospace; color: #dbe7ff; white-space: nowrap; }
+.tree .name a { color: #87cefa; text-decoration: underline; text-decoration-color: rgba(135, 206, 250, 0.35); text-underline-offset: 3px; }
+.tree .name a:hover { color: #b8e4ff; text-decoration-color: currentColor; }
+.tree .note { color: #a8bfd4; font: 12.5px/1.6 var(--font-geist-sans), sans-serif; }
+
+/* Who renders a grid area, as in GridAreasDiagram: the layout (neutral) or
+   each page (blue). Every file gets the chip's space, so names line up. */
+.tree .name::before,
+.tree .legend span::before {
+  content: "";
+  display: inline-block;
+  width: 14px;
+  height: 8px;
+  margin-right: 8px;
+  border-radius: 2px;
+  vertical-align: 1px;
+}
+.tree [data-tone="layout"]::before { background: rgba(140, 197, 232, 0.12); border: 1px solid rgba(140, 197, 232, 0.45); }
+.tree [data-tone="page"]::before { background: rgba(57, 135, 229, 0.3); border: 1px solid #3987e5; }
+
+.tree .legend { display: flex; flex-wrap: wrap; gap: 4px 20px; max-width: none; margin: 12px 0 0; color: #a8bfd4; font: 12px/1.5 var(--font-geist-sans), sans-serif; }
