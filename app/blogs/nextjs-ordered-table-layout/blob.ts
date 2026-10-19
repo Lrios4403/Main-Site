@@ -540,21 +540,6 @@ export const contactPageStylesExample = `
 }
 `
 
-export const layoutComparison = `
-HTML example                Next.js project
-┌──────────────────────┐    ┌──────────────────────┐
-│ header               │    │ header               │
-├─────────┬────────────┤    ├─────────┬────────────┤
-│ sidebar │ content    │    │ sidebar │ content    │
-│         │            │    ├─────────┤            │
-│         │            │    │ stats   │            │
-│         │            │    ├─────────┤            │
-│         │            │    │ filler  │            │
-├─────────┴────────────┤    ├─────────┴────────────┤
-│ footer               │    │ footer               │
-└──────────────────────┘    └──────────────────────┘
-`
-
 export const addingAreaExample = `
 .grid {
   min-height: 100vh;

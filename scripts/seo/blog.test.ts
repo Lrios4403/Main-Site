@@ -146,7 +146,7 @@ describe("HTML audit rejects regressions", () => {
     ["missing H1", html => html.replace(/<h1>.*?<\/h1>/, "")],
     ["wrong canonical", html => html.replace('rel="canonical"', 'rel="other"')],
     ["duplicate H1", html => html.replace("</article>", "<h1>Extra</h1></article>")],
-    ["broken anchor", html => html.replace('id="abstract"', 'id="missing"')],
+    ["broken anchor", html => html.replace(`id="${post.sections[0].id}"`, 'id="missing"')],
     ["noindex", html => html.replace('content="index, follow"', 'content="noindex, follow"')],
     ["malformed JSON", html => html.replace('"@graph":', '"@graph": BROKEN')],
     ["wrong schema ID", html => html.replaceAll("#article", "#wrong")],
