@@ -33,27 +33,40 @@ function columnWidth(nodes: TreeNode[], depth = 0): number {
     : depth * INDENT_CH + CHIP_CH + node.name.length));
 }
 
-function Nodes({ nodes, depth, column }: { nodes: TreeNode[]; depth: number; column: number }) {
+// Rows are numbered in reading order, folders included, so every other row
+// can be tinted across the whole tree rather than restarting in each folder.
+// A node takes its own row plus all of its descendants'.
+function rowCount(node: TreeNode): number {
+  return 1 + (node.children ?? []).reduce((sum, child) => sum + rowCount(child), 0);
+}
+
+function Nodes({ nodes, depth, column, first }: { nodes: TreeNode[]; depth: number; column: number; first: number }) {
   return (
     <ul className={styles.list}>
-      {nodes.map((node) => (
-        <li key={node.name} className={styles.item}>
-          {node.children ? (
-            <details open className={styles.folder}>
-              <summary className={styles.folderName}>{node.name}/</summary>
-              <Nodes nodes={node.children} depth={depth + 1} column={column} />
-            </details>
-          ) : (
-            <div className={styles.file}>
-              <span className={styles.name} data-tone={node.tone}
-                style={{ "--w": column - depth * INDENT_CH } as CSSProperties}>
-                {node.href ? <a href={node.href}>{node.name}</a> : node.name}
-              </span>
-              {node.note && <span className={styles.note}>{node.note}</span>}
-            </div>
-          )}
-        </li>
-      ))}
+      {nodes.map((node, i) => {
+        const row = first + nodes.slice(0, i).reduce((sum, prev) => sum + rowCount(prev), 0);
+        const alt = row % 2 === 1 || undefined;
+        return (
+          <li key={node.name} className={styles.item}>
+            {node.children ? (
+              <details open className={styles.folder}>
+                <summary className={`${styles.folderName} ${styles.row}`} data-alt={alt}>{node.name}/</summary>
+                <Nodes nodes={node.children} depth={depth + 1} column={column} first={row + 1} />
+              </details>
+            ) : (
+              <div className={`${styles.file} ${styles.row}`} data-alt={alt}>
+                <span className={styles.name} data-tone={node.tone}
+                  style={{ "--w": column - depth * INDENT_CH } as CSSProperties}>
+                  {node.href ? <a href={node.href}>{node.name}</a> : node.name}
+                  {/* A dotted leader from the name to its note, like a table of contents */}
+                  {node.note && <span className={styles.leader} aria-hidden="true" />}
+                </span>
+                {node.note && <span className={styles.note}>{node.note}</span>}
+              </div>
+            )}
+          </li>
+        );
+      })}
     </ul>
   );
 }
@@ -69,7 +82,7 @@ export default function FileTree({ title, nodes, legend, children }: {
     <figure className={styles.tree} aria-label={title}>
       <figcaption className={styles.toolbar}>{title}</figcaption>
       <div className={styles.body}>
-        <Nodes nodes={nodes} depth={0} column={column} />
+        <Nodes nodes={nodes} depth={0} column={column} first={0} />
         {legend && (
           <p className={styles.legend}>
             <span data-tone="layout">{legend.layout}</span>
