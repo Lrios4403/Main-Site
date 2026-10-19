@@ -4,7 +4,9 @@
 .toolbar button { padding:4px 8px; border:1px solid #8cc5e833; border-radius:4px; }
 .code { overflow:auto; }
 .code[data-collapsed] { max-height:22rem; }
-.code pre { border:0; border-radius:0; box-shadow:none; }
+/* .block raises these above the article's pre/p rules (Prose.module.css), so the
+   code and the note sit flush inside the block's own border */
+.block .code pre { max-width:none; margin:0; border:0; border-radius:0; box-shadow:none; }
 .expand { width:100%; padding:10px; border-top:1px solid #8cc5e826; background:#122238; }
 .block button:focus-visible, .code:focus-visible { outline:2px solid #a6e7d6; outline-offset:-2px; }
 
@@ -12,3 +14,29 @@
 .toolbar button, .expand { font-family:var(--font-toshiba),monospace; }
 
 .code .plain { margin:0; padding:16px; white-space:pre; font:13px/1.65 var(--font-geist-mono),monospace; color:#dbe7ff; background:#070f1e; }
+
+/* Highlighted code, rendered to HTML on the server (CodeBlock.tsx). These are
+   the Dracula theme's pre/code styles that react-syntax-highlighter used to
+   write inline on every block; .block outranks the article's pre/code rules. */
+.block .hl { padding:16px; background:#070f1e; color:#f8f8f2; font:13px/1.65 Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace; text-shadow:0 1px rgba(0,0,0,.3); text-align:left; white-space:pre; word-spacing:normal; word-break:normal; overflow-wrap:normal; tab-size:4; hyphens:none; overflow:auto; }
+.block .hl code { padding:0; border:0; background:none; color:inherit; font:inherit; line-height:1.5; white-space:pre; }
+/* One class per Dracula token colour (tokens in the base colour get no span) */
+.hl :global(.cm) { color:#6272a4; }
+.hl :global(.pk) { color:#ff79c6; }
+.hl :global(.pu) { color:#bd93f9; }
+.hl :global(.gr) { color:#50fa7b; }
+.hl :global(.yl) { color:#f1fa8c; }
+.hl :global(.cy) { color:#8be9fd; }
+.hl :global(.or) { color:#ffb86c; }
+/* Line numbers: as wide as the largest (--ln, set per block), never selected or copied */
+.hl :global(.ln) { display:inline-block; min-width:var(--ln); padding-right:1em; text-align:right; user-select:none; color:#6272a4; }
+
+/* Variant dropdown in the toolbar, and the variant's note under it */
+.picker { display:flex; align-items:center; gap:8px; min-width:0; }
+.picker select { min-width:0; max-width:100%; padding:3px 6px; border:1px solid #8cc5e855; border-radius:4px; background:#0b1f3d; color:#d6ebff; font:inherit; cursor:pointer; text-overflow:ellipsis; }
+.picker select:focus-visible { outline:2px solid #a6e7d6; outline-offset:1px; }
+/* On a phone the dropdown alone names the block (its label stays on the select for screen readers) */
+@media (max-width:480px) { .picker > span { display:none; } }
+.block .note { max-width:none; margin:0; padding:8px 12px; border-bottom:1px solid #8cc5e826; background:#0b1730; color:#a8bfd4; font:12.5px/1.55 var(--font-geist-sans),sans-serif; }
+/* Inline code in prose doesn't wrap (Prose.module.css); a note's commands must */
+.block .note code { font-size:12px; white-space:normal; overflow-wrap:anywhere; -webkit-box-decoration-break:clone; box-decoration-break:clone; }
