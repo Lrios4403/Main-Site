@@ -1,6 +1,7 @@
 import { load } from "cheerio";
 import { absoluteUrl } from "../../lib/blog/urls";
 import { sitePageCrumbs, type SitePage } from "../../lib/site-pages";
+import { checkByline, checkSections } from "./html";
 
 /** Inspect server-rendered HTML; do not follow arbitrary links or run page scripts. */
 export function checkSiteHtml(html: string, page: SitePage): void {
@@ -22,6 +23,13 @@ export function checkSiteHtml(html: string, page: SitePage): void {
   require(!/noindex/i.test($('meta[name="robots"], meta[name="googlebot"]').map((_, el) => $(el).attr("content")).get().join(" ")), "public page is noindex");
   const ids = $("[id]").map((_, el) => $(el).attr("id")).get();
   require(new Set(ids).size === ids.length, "duplicate HTML IDs");
+  // Article-style pages get the posts' guarantees: the registry heading is the
+  // H1, and the section list matches the headings and the table of contents
+  if (page.article) {
+    require($("h1").text().trim() === page.article.heading, "wrong page heading");
+    checkSections($, page.article.sections, require);
+    checkByline($, { ...page.article, updated: page.lastModified }, require);
+  }
   $("img").each((_, el) => require($(el).attr("alt") !== undefined, "image missing alt"));
   const nodes: Record<string, unknown>[] = [];
   $('script[type="application/ld+json"]').each((_, el) => {

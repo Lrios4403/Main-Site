@@ -1,7 +1,49 @@
-import { load } from "cheerio";
-import type { PostRecord } from "../../lib/blog/types";
+import { load, type CheerioAPI } from "cheerio";
+import type { ArticleMeta, ArticleSection, PostRecord } from "../../lib/blog/types";
 import { absoluteUrl } from "../../lib/blog/urls";
 import { getAuthor } from "../../lib/blog/authors";
+
+type Require = (condition: unknown, message: string) => void;
+
+/** The header byline (ArticleHeader's [data-byline]) shows the author, the
+ *  dates and the reading time. Checked inside the byline itself, so dates
+ *  elsewhere on the page (an update log, the sidebar) can't stand in for it. */
+export function checkByline($: CheerioAPI, meta: ArticleMeta, require: Require): void {
+  const byline = $("[data-byline]");
+  require(byline.length === 1, "missing byline");
+  require(byline.find(`time[datetime="${meta.published}"]`).length === 1, "missing visible publication date");
+  if (meta.updated) require(byline.find(`time[datetime="${meta.updated}"]`).length === 1, "missing visible update date");
+  require(byline.text().includes(getAuthor(meta.authorId).name), "missing author");
+  require(byline.text().includes(`About ${meta.readingMinutes} min read`), "missing reading time");
+}
+
+/** For any page with a registry section list (posts and article-style site
+ *  pages): unique ids; each section is exactly one heading of its level, in
+ *  registry order, linked from the table of contents; every in-page link
+ *  resolves; and headings never skip a level on the way down. */
+export function checkSections($: CheerioAPI, sections: ArticleSection[], require: Require): void {
+  const ids = $("[id]").toArray().map(element => $(element).attr("id"));
+  require(new Set(ids).size === ids.length, "duplicate HTML IDs");
+  let lastIndex = -1;
+  for (const section of sections) {
+    const heading = $(`[id="${section.id}"]`);
+    require(heading.length === 1 && heading[0].tagName === `h${section.level}`, `missing/wrong heading ${section.id}`);
+    const index = ids.indexOf(section.id);
+    require(index > lastIndex, "TOC order differs from article");
+    lastIndex = index;
+    require($(`nav[aria-label="On this page"] a[href="#${section.id}"]`).length > 0, `missing TOC link ${section.id}`);
+  }
+  $('a[href^="#"]').each((_, element) => {
+    const id = decodeURIComponent($(element).attr("href")!.slice(1));
+    if (id) require(ids.includes(id), `broken fragment ${id}`);
+  });
+  let previous = 1;
+  $("h1, h2, h3, h4, h5, h6").each((_, element) => {
+    const level = Number(element.tagName.slice(1));
+    require(level <= previous + 1, `heading skips from h${previous} to h${level}`);
+    previous = level;
+  });
+}
 
 export function checkPostHtml(html: string, post: PostRecord): void {
   const $ = load(html);
@@ -19,24 +61,8 @@ export function checkPostHtml(html: string, post: PostRecord): void {
   require($('meta[property="og:type"]').attr("content") === "article", "wrong OG type");
   require($('meta[name="twitter:card"]').attr("content") === (post.cover ? "summary_large_image" : "summary"), "wrong Twitter card");
   require(!/noindex/i.test($('meta[name="robots"]').attr("content") ?? ""), "published post is noindex");
-  const ids = $("[id]").toArray().map(element => $(element).attr("id"));
-  require(new Set(ids).size === ids.length, "duplicate HTML IDs");
-  let lastIndex = -1;
-  for (const section of post.sections) {
-    const heading = $(`[id="${section.id}"]`);
-    require(heading.length === 1 && heading[0].tagName === `h${section.level}`, `missing/wrong heading ${section.id}`);
-    const index = ids.indexOf(section.id);
-    require(index > lastIndex, "TOC order differs from article");
-    lastIndex = index;
-    require($(`nav[aria-label="On this page"] a[href="#${section.id}"]`).length > 0, `missing TOC link ${section.id}`);
-  }
-  $('a[href^="#"]').each((_, element) => {
-    const id = decodeURIComponent($(element).attr("href")!.slice(1));
-    if (id) require(ids.includes(id), `broken fragment ${id}`);
-  });
-  require($(`time[datetime="${post.published}"]`).length > 0, "missing visible publication date");
-  if (post.updated) require($(`time[datetime="${post.updated}"]`).length > 0, "missing visible update date");
-  require($("article").text().includes(getAuthor(post.authorId).name), "missing author");
+  checkSections($, post.sections, require);
+  checkByline($, post, require);
   require($('nav[aria-label="Breadcrumb"] li').length === 3, "missing visible breadcrumbs");
   const graphs: Record<string, unknown>[] = [];
   $('script[type="application/ld+json"]').each((_, element) => {

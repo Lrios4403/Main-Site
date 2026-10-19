@@ -60,6 +60,8 @@ export function pageMetadata({ title, description, path, article, noIndex }: Pag
   };
 }
 
+// Static pages are Open Graph "website"s. Fields are picked, not spread: a
+// SitePage's own `article` block (its section list) is not an OG article.
 export function sitePageMetadata(page: SitePage): Metadata {
-  return pageMetadata({ ...page, title: page.path === "/" ? undefined : page.title });
+  return pageMetadata({ title: page.path === "/" ? undefined : page.title, description: page.description, path: page.path });
 }

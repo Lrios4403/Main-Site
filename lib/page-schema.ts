@@ -19,6 +19,12 @@ export function sitePageJsonLd(page: SitePage) {
     ...(page.path === "/" ? { mainEntity: { "@id": personId } } : {}),
     ...(page.schemaType === "ContactPage" ? { about: { "@id": personId } } : {}),
     ...(page.project ? { mainEntity: { "@id": `${url}#project` } } : {}),
+    // Article-style pages have a visible byline; describe the same dates and author
+    ...(page.article ? {
+      datePublished: page.article.published,
+      ...(page.lastModified ? { dateModified: page.lastModified } : {}),
+      author: { "@id": personId },
+    } : {}),
     ...(items.length ? { mainEntity: { "@id": `${url}#list` } } : {}),
   }];
   if (page.path === "/") {
@@ -31,6 +37,10 @@ export function sitePageJsonLd(page: SitePage) {
       itemListElement: sitePageCrumbs(page).map((crumb, index) => ({
         "@type": "ListItem", position: index + 1, name: crumb.name, item: absoluteUrl(crumb.path),
       })) });
+  }
+  // The author and creator references above need their Person node on this page too
+  if (page.path !== "/" && (page.article || page.project)) {
+    graph.push({ "@type": "Person", "@id": personId, ...site.author, url: absoluteUrl("/") });
   }
   if (page.project) graph.push({ "@type": "CreativeWork", "@id": `${url}#project`,
     name: page.project.name, description: page.project.description, url,

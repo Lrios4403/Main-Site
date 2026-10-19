@@ -3,7 +3,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { postRegistry, getPublishedPosts, getPost } from "../../lib/posts";
 import { parseDate, formatDate, validateDates } from "../../lib/blog/dates";
-import { validatePosts } from "../../lib/blog/validate";
+import { validatePosts, validateSitePages } from "../../lib/blog/validate";
 import { buildPostMetadata } from "../../lib/blog/metadata";
 import { buildPostJsonLd } from "../../lib/blog/schema";
 import { resolveRelated } from "../../lib/blog/related";
@@ -14,7 +14,7 @@ import { checkPostHtml } from "./html";
 import sitemap from "../../app/sitemap";
 import { checkMedia } from "./media";
 import { checkSiteHtml } from "./site-html";
-import { getSitePage } from "../../lib/site-pages";
+import { getArticlePage, getSitePage, sitePageCrumbs, sitePages } from "../../lib/site-pages";
 import { sitePageJsonLd } from "../../lib/page-schema";
 
 const fixture = (changes: Partial<PostRecord> = {}): PostRecord => ({ ...structuredClone(postRegistry[0]), ...changes });
@@ -41,9 +41,9 @@ function fixtureHtml(post: PostRecord) {
     <meta property="og:url" content="${absoluteUrl(post.path)}"><meta property="og:type" content="article">
     <meta name="twitter:card" content="${post.cover ? "summary_large_image" : "summary"}"><meta name="robots" content="index, follow">
     ${post.cover ? `<meta property="og:image" content="${absoluteUrl(post.cover.src)}">` : ""}</head>
-    <body><main><article><h1>${escape(post.title)}</h1><span>Logan Rios</span>
+    <body><main><article><h1>${escape(post.title)}</h1>
     ${post.cover && post.cover.visible !== false ? `<figure><img src="${post.cover.src}" alt="${escape(post.cover.alt)}"></figure>` : ""}
-    <time datetime="${post.published}">${post.published}</time>${post.updated ? `<time datetime="${post.updated}">${post.updated}</time>` : ""}
+    <div data-byline><span>Logan Rios</span><time datetime="${post.published}">${post.published}</time>${post.updated ? `<time datetime="${post.updated}">${post.updated}</time>` : ""}<span>About ${post.readingMinutes} min read</span></div>
     <nav aria-label="Breadcrumb"><ol><li>Home</li><li>Blog</li><li>${escape(post.title)}</li></ol></nav>
     <nav aria-label="On this page">${post.sections.map(section => `<a href="#${section.id}">${section.title}</a>`).join("")}</nav>
     ${post.sections.map(section => `<h${section.level} id="${section.id}">${section.title}</h${section.level}>`).join("")}
@@ -180,4 +180,77 @@ test("companion worksheets explicitly contain no claimed test results", () => {
   expect(environment.toolCallPassed).toBeNull();
   const client = JSON.parse(readFileSync("docs/examples/intel-npu/client.example.json", "utf8"));
   expect(new URL(client.apiBase).hostname).toBe("localhost");
+});
+
+describe("article-style site pages", () => {
+  // The archives project notes, rendered as just enough HTML for the audit
+  const projectHtml = (path: string) => {
+    const page = getArticlePage(path);
+    const toc = page.article.sections.map(section => `<a href="#${section.id}">${escape(section.title)}</a>`).join("");
+    const headings = page.article.sections.map(section => `<h${section.level} id="${section.id}">${escape(section.title)}</h${section.level}>`).join("");
+    return `<html lang="en"><head><title>${escape(page.title)} | M4cgyver</title>
+      <meta name="description" content="${escape(page.description)}">
+      <link rel="canonical" href="${absoluteUrl(page.path)}">
+      <meta property="og:url" content="${absoluteUrl(page.path)}"><meta property="og:type" content="website">
+      <meta name="twitter:card" content="summary_large_image"><meta name="robots" content="index, follow"></head>
+      <body><main><article><h1 id="article-title">${escape(page.article.heading)}</h1>
+      <div data-byline><span>Logan Rios</span><time datetime="${page.article.published}">x</time><time datetime="${page.lastModified}">x</time><span>About ${page.article.readingMinutes} min read</span></div>
+      <nav aria-label="On this page">${toc}</nav>
+      <nav aria-label="Breadcrumb"><ol>${sitePageCrumbs(page).map(crumb => `<li>${escape(crumb.name)}</li>`).join("")}</ol></nav>
+      ${headings}
+      <script type="application/ld+json">${JSON.stringify(sitePageJsonLd(page)).replaceAll("<", "\\u003c")}</script>
+      </article></main></body></html>`;
+  };
+  const page = getArticlePage("/projects/archives");
+  const html = projectHtml(page.path);
+  const firstH3 = page.article.sections.find(section => section.level === 3)!;
+
+  test("the registry is valid: paths, parents, dates, sections and resources", () => {
+    expect(() => validateSitePages(sitePages, new Date().toISOString().slice(0, 10))).not.toThrow();
+    const broken = structuredClone(page);
+    broken.article.sections.push({ ...broken.article.sections[0] });
+    const others = sitePages.filter(other => other.path !== page.path);
+    expect(() => validateSitePages([...others, broken], "2099-01-01")).toThrow("Invalid section");
+    expect(() => validateSitePages([...others, { ...page, lastModified: "2099-01-01" }], "2026-10-19")).toThrow("future");
+    expect(() => validateSitePages([...others, { ...page, parent: "/nowhere" }], "2099-01-01")).toThrow("unknown parent");
+    const cycle = sitePages.map(other => other.path === "/projects" ? { ...other, parent: page.path } : other);
+    expect(() => validateSitePages(cycle, "2099-01-01")).toThrow("parent cycle");
+  });
+  test("the audit accepts the page and rejects broken sections", () => {
+    expect(() => checkSiteHtml(html, page)).not.toThrow();
+    expect(() => checkSiteHtml(html.replace(`<a href="#${firstH3.id}">`, `<a href="#${firstH3.id}-gone">`), page)).toThrow("missing TOC link");
+    expect(() => checkSiteHtml(html.replace(`<a href="#${firstH3.id}">`, "<a>"), page)).toThrow("missing TOC link");
+    expect(() => checkSiteHtml(html.replace(`<h3 id="${firstH3.id}">${escape(firstH3.title)}</h3>`, `<h4 id="${firstH3.id}">x</h4>`), page)).toThrow("missing/wrong heading");
+    expect(() => checkSiteHtml(html.replace(`About ${page.article.readingMinutes} min read`, ""), page)).toThrow("missing reading time");
+    // A date elsewhere on the page can't stand in for the byline's
+    expect(() => checkSiteHtml(html.replace("<div data-byline>", "<div>"), page)).toThrow("missing byline");
+    expect(() => checkSiteHtml(html.replace("</main>", `<a href="#not-on-the-page">x</a></main>`), page)).toThrow("broken fragment");
+    expect(() => checkSiteHtml(html.replace("</main>", "<h2>x</h2><h4>y</h4></main>"), page)).toThrow("heading skips");
+    expect(() => checkSiteHtml(html.replace(`>${escape(page.article.heading)}</h1>`, ">Something else</h1>"), page)).toThrow("wrong page heading");
+    expect(() => checkSiteHtml(html.replace(`<time datetime="${page.article.published}">`, "<time>"), page)).toThrow("publication date");
+    expect(() => validateSitePages([...sitePages.filter(other => other.path !== page.path), { ...page, article: { ...page.article, published: "2026-12-01" } }], "2026-12-31")).toThrow("Update precedes publication");
+  });
+  test("the archive page publishes no infrastructure details", () => {
+    // Addresses, host:port pairs, internal hostnames and WireGuard-style keys
+    const leaks = [
+      /\b(?:\d{1,3}\.){3}\d{1,3}\b/,
+      /(?<![\w:])(?:[0-9a-f]{1,4}:){1,7}:(?:[0-9a-f]{1,4})?(?![\w:])|(?<![\w:])(?:[0-9a-f]{1,4}:){7}[0-9a-f]{1,4}(?![\w:])|\[::1?\]/i,
+      /\blocalhost\b/i,
+      /\b(?:[a-z][a-z0-9-]*(?:\.[a-z0-9-]+)*):\d{2,5}\b/i,
+      /\.(?:lan|internal|local|localdomain|home|corp|home\.arpa|ts\.net)\b/i,
+      /\b(?:PrivateKey|PresharedKey|PublicKey|AllowedIPs|Endpoint|ListenPort)\s*=/i,
+      /(?:^|[\s"'`(=])\/(?:mnt|srv|opt|root|home\/[\w.-]+|var\/lib|etc\/wireguard)\//m,
+      /(?:^|[\s"'`(])\\\\[\w.-]+\\[\w$.-]+/m,
+      /\bport\s+\d{2,5}\b/i,
+      /\b[a-z]+-archives\b/,
+      /network_mode:\s*service:(?!&lt;|<)/,
+      /[A-Za-z0-9+/]{42,43}=/,
+    ];
+    const files = readdirSync("app/projects/archives").map(name => join("app/projects/archives", name));
+    expect(files.length).toBeGreaterThan(1);
+    for (const file of [...files, "lib/site-pages.ts"]) {
+      const source = readFileSync(file, "utf8");
+      for (const pattern of leaks) expect({ file, match: source.match(pattern)?.[0] ?? null }).toEqual({ file, match: null });
+    }
+  });
 });

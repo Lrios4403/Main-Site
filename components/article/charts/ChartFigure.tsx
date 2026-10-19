@@ -25,12 +25,15 @@ type Props = {
   // The chart's numbers as a table, so no value is only reachable by hovering
   // (only diagrams, which carry no data, leave it out)
   table?: { columns: string[]; rows: ReactNode[][] };
+  // A diagram's content as plain text (a list of its steps or parts), for
+  // anyone who can't see the picture or wants to copy from it
+  text?: ReactNode;
   code?: BenchCode;
   children: ReactNode;
 };
 
-// A chart card: title, legend, the SVG, a caption, then collapsible data and code.
-export default function ChartFigure({ title, subtitle, legend, caption, table, code, children }: Props) {
+// A chart card: title, legend, the SVG, a caption, then collapsible data, text and code.
+export default function ChartFigure({ title, subtitle, legend, caption, table, text, code, children }: Props) {
   return (
     <figure className={styles.chart}>
       <figcaption>
@@ -53,6 +56,13 @@ export default function ChartFigure({ title, subtitle, legend, caption, table, c
         <details className={styles.data}>
           <summary>Show the numbers</summary>
           <ArticleTable caption={title} columns={table.columns} rows={table.rows} />
+        </details>
+      )}
+      {text && (
+        <details className={styles.data}>
+          {/* Named after the figure, so several on one page are told apart by screen readers */}
+          <summary aria-label={`Show as text: ${title}`}>Show as text</summary>
+          <div className={styles.text}>{text}</div>
         </details>
       )}
       {code && (

@@ -18,6 +18,9 @@ export type ArticleMedia = {
 };
 
 export type ArticleSection = { id: string; title: string; level: 2 | 3 | 4 };
+/** The byline shown in an article's header and sidebar: who, when, how long.
+ *  Posts carry these fields directly; article-style site pages build it. */
+export type ArticleMeta = { authorId: string; published: string; updated?: string; readingMinutes: number };
 export type ArticleResource = { label: string; href: string; note?: string };
 
 export type PostRecord = {

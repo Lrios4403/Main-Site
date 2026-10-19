@@ -1,21 +1,24 @@
 import { getAuthor } from "@/lib/blog/authors";
-import type { ArticleResource } from "@/lib/blog/types";
+import type { ArticleMeta, ArticleResource } from "@/lib/blog/types";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import styles from "@/components/main/styles.module.css";
 import Window from "@/components/window/Window";
-import { formatDate, type Post } from "@/lib/posts";
+import { formatDate } from "@/lib/blog/dates";
 import side from "./PostSidebar.module.css";
 
 export type Resource = ArticleResource;
 type PostSidebarProps = {
-  post?: Post;
+  // The byline: a post, or an article-style site page's meta
+  post?: ArticleMeta;
+  // The byline window's title ("Author & post info" on posts)
+  infoTitle?: string;
   resources?: Resource[];
   credits?: Resource[];
   children?: ReactNode;
 };
 
-export default function PostSidebar({ post, resources = [], credits = [], children }: PostSidebarProps) {
+export default function PostSidebar({ post, infoTitle = "Author & post info", resources = [], credits = [], children }: PostSidebarProps) {
   const author = getAuthor(post?.authorId ?? "logan-rios");
   const referenceList = (items: Resource[]) => (
     <ul className={side.list}>
@@ -27,7 +30,7 @@ export default function PostSidebar({ post, resources = [], credits = [], childr
   );
   return (
     <aside className={`${styles.navLhs} ${side.column}`}>
-      <Window collapsible title={post ? "Author & post info" : "Author"} bodyStyle={{ padding: "12px" }}>
+      <Window collapsible title={post ? infoTitle : "Author"} bodyStyle={{ padding: "12px" }}>
         <ul className={side.list}>
           <li><Link href={author.path} rel="author">{author.name}{author.alternateName && ` (${author.alternateName})`}</Link><span className={side.label}>Author</span></li>
           {post && <>

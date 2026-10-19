@@ -1,6 +1,6 @@
 import { load } from "cheerio";
 import { postRegistry, getPublishedPosts } from "../../lib/posts";
-import { validatePosts } from "../../lib/blog/validate";
+import { validatePosts, validateSitePages } from "../../lib/blog/validate";
 import { absoluteUrl } from "../../lib/blog/urls";
 import { checkPostHtml } from "./html";
 import { checkMedia } from "./media";
@@ -12,6 +12,7 @@ if (!["localhost", "127.0.0.1", "[::1]"].includes(base.hostname) || !["http:", "
   throw new Error("This bounded audit accepts a localhost origin only; it never crawls external links or article examples.");
 }
 validatePosts(postRegistry, new Date().toISOString().slice(0, 10));
+validateSitePages(sitePages, new Date().toISOString().slice(0, 10));
 const published = getPublishedPosts();
 const registeredPaths = new Set([...sitePages, ...published].map(page => page.path));
 const shareImages = new Set<string>();
@@ -50,7 +51,7 @@ const index = load(await fetchPage("/blogs"));
 const sitemap = load(await fetchPage("/sitemap.xml"), { xml: true });
 for (const page of sitePages) {
   checkSiteHtml(await fetchPage(page.path), page);
-  console.log(`PASS ${page.path}: headings, metadata, schema, breadcrumbs and canonical links`);
+  console.log(`PASS ${page.path}: headings, metadata, schema, breadcrumbs and canonical links${page.article ? `, ${page.article.sections.length} sections and the table of contents` : ""}`);
 }
 const locations = sitemap("url > loc").map((_, el) => sitemap(el).text()).get();
 if (locations.length !== registeredPaths.size || new Set(locations).size !== locations.length || [...registeredPaths].some(path => !locations.includes(absoluteUrl(path)))) throw new Error("Sitemap must contain each published route exactly once");
