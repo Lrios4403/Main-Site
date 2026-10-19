@@ -12,9 +12,12 @@
 }
 .tree .body { padding: 12px 16px 14px; overflow-x: auto; }
 
-.tree .list { margin: 0; padding: 0; list-style: none; }
-/* Nested levels: indented, with a faint guide line down the side */
-.tree .list .list { margin: 2px 0 2px 6px; padding-left: 14px; border-left: 1px dashed rgba(140, 197, 232, 0.25); }
+/* The tree's font sets 1ch: indents, chips and name boxes are all measured in
+   it, so the notes line up in one column (FileTree.tsx does the arithmetic) */
+.tree .list { margin: 0; padding: 0; list-style: none; font: 13px/1.9 var(--font-geist-mono), monospace; }
+/* Nested levels: indented 2.75ch, with a faint guide line that takes no width */
+.tree .list .list { position: relative; margin: 2px 0 2px 0.75ch; padding-left: 2ch; }
+.tree .list .list::before { content: ""; position: absolute; top: 0; bottom: 0; left: 0; border-left: 1px dashed rgba(140, 197, 232, 0.25); }
 .tree .item { margin: 0; padding: 0; }
 .tree .item::marker { content: none; }
 
@@ -30,12 +33,14 @@
 .tree .folder[open] > .folderName::before { content: "▾"; }
 .tree .folderName:focus-visible { outline: 2px solid #a6e7d6; outline-offset: 2px; border-radius: 2px; }
 
-/* A file: its name, then what it does; on a narrow screen the note wraps under the name */
-.tree .file { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 14px; padding: 1px 0; }
-.tree .name { font: 13px/1.9 var(--font-geist-mono), monospace; color: #dbe7ff; white-space: nowrap; }
+/* A file: a name box of --w ch (the column minus its indent), then the note,
+   so every note starts at the same x. Where the note can't fit beside the
+   column (a phone), it wraps under the name instead. */
+.tree .file { display: flex; flex-wrap: wrap; align-items: baseline; padding: 1px 0; }
+.tree .name { flex: none; width: calc(var(--w) * 1ch); font: 13px/1.9 var(--font-geist-mono), monospace; color: #dbe7ff; white-space: nowrap; }
 .tree .name a { color: #87cefa; text-decoration: underline; text-decoration-color: rgba(135, 206, 250, 0.35); text-underline-offset: 3px; }
 .tree .name a:hover { color: #b8e4ff; text-decoration-color: currentColor; }
-.tree .note { color: #a8bfd4; font: 12.5px/1.6 var(--font-geist-sans), sans-serif; }
+.tree .note { flex: 1 1 14rem; min-width: 0; color: #a8bfd4; font: 12.5px/1.6 var(--font-geist-sans), sans-serif; }
 
 /* Who renders a grid area, as in GridAreasDiagram: the layout (neutral) or
    each page (blue). Every file gets the chip's space, so names line up. */
@@ -43,9 +48,11 @@
 .tree .legend span::before {
   content: "";
   display: inline-block;
-  width: 14px;
+  box-sizing: border-box;
+  /* 2.6ch in all: FileTree.tsx's CHIP_CH */
+  width: 1.6ch;
   height: 8px;
-  margin-right: 8px;
+  margin-right: 1ch;
   border-radius: 2px;
   vertical-align: 1px;
 }
