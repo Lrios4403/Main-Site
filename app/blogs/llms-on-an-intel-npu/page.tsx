@@ -1,5 +1,5 @@
 import SiteLayout from "@/components/site-layout/SiteLayout";
-import { WhatYouNeed, VerifyNpu, Troubleshooting, Glossary, UpdateNotes } from "./SetupNotes";
+import { WhatYouNeed, VerifyNpu, Devices, Troubleshooting, Glossary, UpdateNotes } from "./SetupNotes";
 import { Benchmarks } from "./Benchmarks";
 import ArticleTable from "@/components/article/ArticleTable";
 import { CodeBlock } from "@/components/article/CodeBlock";
@@ -95,19 +95,32 @@ export default function BlogOpenVINOModelServerSetup() {
             code: `python -c "from huggingface_hub import snapshot_download; snapshot_download('OpenVINO/Qwen3-8B-int4-cw-ov', local_dir=r'%USERPROFILE%\\Downloads\\models\\OpenVINO\\Qwen3-8B-int4-cw-ov')"`,
             note: <>Needs <code>pip install huggingface_hub</code> first.</>,
           },
+          {
+            label: "CMD · OVMS",
+            language: "cmd",
+            code: `ovms.exe --pull --source_model OpenVINO/Qwen3-8B-int4-cw-ov --model_repository_path "%USERPROFILE%\\Downloads\\models" --task text_generation`,
+            note: <>Run it from the OVMS folder after <code>setupvars.bat</code>. <code>--pull</code> downloads and exits; it
+              doesn&apos;t start a server.</>,
+          },
         ]} />
         <p>
-          OVMS can also fetch it with <code>--pull</code> (see the{" "}
-          <a href="https://docs.openvino.ai/2026/model-server/ovms_docs_pull.html">model preparation docs</a>). Either way
-          the folder layout is <code>models\OpenVINO\Qwen3-8B-int4-cw-ov</code>.
+          All three put the model in <code>models\OpenVINO\Qwen3-8B-int4-cw-ov</code>. You can also skip this step: the
+          launch command below downloads the model if that folder doesn&apos;t exist yet. When it does exist, OVMS uses it
+          as is (the log says <code>Skipping download</code>). See the{" "}
+          <a href="https://docs.openvino.ai/2026/model-server/ovms_docs_pull.html">model preparation docs</a>.
         </p>
 
         <h3 id="launch-qwen3">Start the server</h3>
         <p>
           From the OVMS folder, after <code>setupvars.bat</code>. This is the one command the rest of the post refers to:
         </p>
-        <CodeBlock kind="command" label="Windows CMD" language="cmd" code={`ovms.exe ^
+        <CodeBlock kind="command" label="Start the server" variants={[
+          {
+            label: "Model repository",
+            language: "cmd",
+            code: `ovms.exe ^
   --rest_port 8000 ^
+  --rest_bind_address 127.0.0.1 ^
   --model_repository_path "%USERPROFILE%\\Downloads\\models" ^
   --source_model OpenVINO/Qwen3-8B-int4-cw-ov ^
   --model_name Qwen3-8B ^
@@ -116,25 +129,49 @@ export default function BlogOpenVINOModelServerSetup() {
   --tool_parser hermes3 ^
   --max_prompt_len 16384 ^
   --plugin_config "{\\"NPUW_LLM_PREFILL_ATTENTION_HINT\\":\\"PYRAMID\\"}" ^
-  --cache_dir .ovcache`} />
+  --cache_dir .ovcache`,
+            note: <>Finds the model under <code>models\OpenVINO\Qwen3-8B-int4-cw-ov</code>{" "}(or downloads it there) and writes
+              these settings into that folder&apos;s <code>graph.pbtxt</code>, on every launch.</>,
+          },
+          {
+            label: "A folder you already have",
+            language: "cmd",
+            code: `ovms.exe ^
+  --rest_port 8000 ^
+  --rest_bind_address 127.0.0.1 ^
+  --model_path "%USERPROFILE%\\Downloads\\models\\OpenVINO\\Qwen3-8B-int4-cw-ov" ^
+  --model_name Qwen3-8B ^
+  --task text_generation ^
+  --target_device NPU ^
+  --tool_parser hermes3 ^
+  --max_prompt_len 16384 ^
+  --plugin_config "{\\"NPUW_LLM_PREFILL_ATTENTION_HINT\\":\\"PYRAMID\\"}" ^
+  --cache_dir .ovcache`,
+            note: <>Point <code>--model_path</code> at the folder itself. OVMS builds the settings in memory and writes nothing
+              into the folder, and never downloads. Use it for a model that lives somewhere else or that you don&apos;t want
+              changed.</>,
+          },
+        ]} />
         <p>
           The first launch compiles the model for the NPU, about 70 seconds, and saves the ~760 MB result in{" "}
           <code>.ovcache</code>. After that it&apos;s ready in about 30 seconds. What the flags do, and what I measured for them:
         </p>
         <ArticleTable caption="The launch flags" columns={["Flag", "What it does", "Measured"]} rows={[
-          [<code key="1">--target_device NPU</code>, "Runs inference on the NPU. CPU and GPU.0 (the Intel iGPU) also work with the same command.", "See the benchmarks"],
+          [<code key="1">--target_device NPU</code>, <span key="d">Runs inference on the NPU. CPU and GPU.0 (the Intel iGPU) also work with the same command; see <a href="#devices">which device is which</a>.</span>, "See the benchmarks"],
           [<code key="2">--max_prompt_len 16384</code>, "The longest prompt the NPU will accept, compiled into the model. Longer prompts get an HTTP 400.", "Costs RAM: ~3.6 GB committed at 1,024, ~11.3 GB at 16,384. The first-token wait is the same either way."],
           [<code key="3">--plugin_config</code>, "Sets the NPU prefill attention hint to PYRAMID.", "Cut the first 16k compile from 514 s to 69 s, and was the only 16k setting whose cache reloaded reliably."],
           [<code key="4">--tool_parser hermes3</code>, "Turns Qwen3's tool-call output into structured calls, which agent frontends need.", "20/20 tool-call cases passed."],
           [<code key="5">--cache_dir .ovcache</code>, "Keeps the compiled model so later launches skip the compile.", "Launch time 69 s → ~30 s."],
           [<code key="6">--model_name Qwen3-8B</code>, "The name clients must use, case included.", "—"],
           [<code key="7">--rest_port 8000</code>, "The HTTP API. Both /v1 and /v3 paths answer.", "—"],
+          [<code key="8">--rest_bind_address 127.0.0.1</code>, <span key="b">Only this PC can connect. Leave it out and OVMS listens on every network interface (its default is <code>0.0.0.0</code>) with no authentication: the <code>apiKey</code> in the client configs below is never checked unless you start OVMS with <code>--api_key_file</code>.</span>, <span key="l">The startup log says so: <code>Authentication will be disabled</code></span>],
         ]} />
         <p>Check that the model is loaded:</p>
         <CodeBlock kind="command" language="cmd" code={"curl http://localhost:8000/v3/models"} />
         <p>It should list a model named <code>Qwen3-8B</code>.</p>
 
         <VerifyNpu />
+        <Devices />
 
         <h2 id="frontend">Part 2: Connect an AI assistant</h2>
         <p>
@@ -188,7 +225,8 @@ export default function BlogOpenVINOModelServerSetup() {
         <p>
           Expect at least ~4.5 seconds before each answer starts, and longer the first time a big prompt is sent. Prompt
           caching speeds up later turns (see <a href="#bench-caching">Prompt caching</a>). A 404 means the model ID in the
-          config doesn&apos;t match <code>--model_name</code>.
+          config doesn&apos;t match <code>--model_name</code>; other errors are in{" "}
+          <a href="#endpoint-mismatch">the error table</a>.
         </p>
 
         <h3 id="claude-code">Claude Code</h3>
@@ -231,10 +269,18 @@ Model: Qwen3-8B`} />
         <h3 id="nollama">Alternative backend: NoLlama</h3>
         <p>
           <a href="https://github.com/aweussom/NoLlama" target="_blank" rel="noopener noreferrer">NoLlama</a> is a lighter
-          Python server that also runs OpenVINO models with an OpenAI-compatible API on the same port. Clone it, run{" "}
+          Python server that also runs OpenVINO models with an OpenAI-compatible API. Clone it, run{" "}
           <code>.\install.ps1</code> then <code>.\start.ps1</code>, and read the model ID from{" "}
-          <code>curl http://localhost:8000/v1/models</code>. Both frontends above work the same way with it, with that model
-          ID in place of <code>Qwen3-8B</code>. I haven&apos;t benchmarked it; everything in Part 3 used OVMS.
+          <code>curl http://localhost:8000/v1/models</code>. It uses port 8000 too, so stop OVMS first (two servers on one
+          port <a href="#port-in-use">don&apos;t always complain</a>).
+        </p>
+        <p>
+          <strong>Same API, not the same NPU features.</strong>{" "}NoLlama&apos;s README (checked October 19, 2026; v1.0.0 is
+          its latest release) says its NPU path caps prompts at 4,096 tokens and has no tool calling, no prefix cache and no
+          vision. Tool calling only works on its GPU and CPU paths. So with the model on the NPU, OpenWork and Claude Code
+          can chat through NoLlama but can&apos;t use tools, which is most of what an agent does. For an agent on the NPU, use
+          the OVMS setup above (20/20 tool calls, 16k prompts). I haven&apos;t benchmarked NoLlama; everything in Part 3 used
+          OVMS.
         </p>
 
         <Benchmarks />

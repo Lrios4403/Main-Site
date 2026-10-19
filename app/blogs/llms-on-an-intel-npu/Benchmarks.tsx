@@ -428,6 +428,7 @@ export function Benchmarks() {
           [<code key="a">OpenVINO/Qwen3-8B-int4-cw-ov</code>, "int4, channel-wise", "Works", "33–69 s / 18–46 s", "~10 tokens/s"],
           [<code key="b">llmware/llama-3.1-8b-instruct-npu-ov</code>, "llmware NPU export", "Works", "161–179 s / 19–25 s", "10.2–10.4 tokens/s"],
           [<code key="c">OpenVINO/TinyLlama-1.1B-Chat-v1.0-int4-ov</code>, "int4", "Works", "86 s / 1.8 s", "33 tokens/s, 1.3 s first token"],
+          [<code key="v">llmware/Qwen2.5-VL-3B-Instruct-ov-int4-npu</code>, "llmware NPU export, vision + text", "Runs, shaky answers (one session)", "Ready in 15 s, no compile wait", "~8 s for a short answer about an image"],
           [<code key="d">OpenVINO/Qwen3-8B-int4-ov</code>, "int4, group-wise", "Compile fails", "—", "—"],
           [<code key="e">OpenVINO/Qwen3-0.6B-int4-ov</code>, "int4, group-wise", "Compile fails", "—", "—"],
           [<code key="f">OpenVINO/Qwen2.5-Coder-0.5B-Instruct-int4-ov</code>, "int4, group-wise", "Compile fails", "—", "—"],
@@ -435,8 +436,20 @@ export function Benchmarks() {
       />
       <p>
         <strong>Use the channel-wise (<code>cw</code>) exports.</strong> This NPU generation rejects the group-wise int4
-        exports in its compiler (<code>Unsupported DequantizeOp configuration</code>; the full error is under <a href="#model-compile-fails">Troubleshooting</a>). That&apos;s exactly
-        why my first attempt with the plain <code>Qwen3-8B-int4-ov</code>{" "}didn&apos;t work.
+        exports in its compiler (<code>Unsupported DequantizeOp configuration</code>; the full log is under <a href="#model-compile-fails">Troubleshooting</a>). That&apos;s exactly
+        why my first attempt with the plain <code>Qwen3-8B-int4-ov</code>{" "}didn&apos;t work. Size doesn&apos;t matter here:
+        the 0.6B fails the same way. OVMS&apos;s own reference asks for NPU models exported with{" "}
+        <code>--group-size -1</code>, which is channel-wise.
+      </p>
+      <p>
+        <strong>Vision models run too.</strong>{" "}On October 19 I served llmware&apos;s Qwen2.5-VL 3B NPU export with OVMS
+        (<code>--model_path</code> and <code>--target_device NPU</code>, none of the Qwen3 flags) and asked it about this
+        post&apos;s cover chart, shrunk to 560×294. The NPU was near 100% busy for most of each answer, and it picked out
+        the longest bar and its value (though it
+        read &ldquo;RTX 5080&rdquo; as &ldquo;RTX 5000&rdquo;). The answers were shaky otherwise: asked what an NPU is, it
+        explained an NPC, and a second question about the chart stopped after 20 tokens. OVMS&apos;s reference says NPU
+        vision requests must include exactly one image, but on 2026.4 a text-only request was answered too. That was one
+        short session, so read it as &ldquo;it runs&rdquo;, not as a benchmark.
       </p>
 
       <h3 id="bench-article">Checking another NPU guide</h3>

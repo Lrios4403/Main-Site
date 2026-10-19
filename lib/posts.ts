@@ -86,6 +86,7 @@ export const postRegistry: Post[] = [
       {"id": "download-qwen3", "title": "Download the model", "level": 3},
       {"id": "launch-qwen3", "title": "Start the server", "level": 3},
       {"id": "verify-npu", "title": "Check it works", "level": 3},
+      {"id": "devices", "title": "Which device is which", "level": 3},
       {"id": "frontend", "title": "Part 2: Connect an assistant", "level": 2},
       {"id": "openwork", "title": "OpenWork", "level": 3},
       {"id": "claude-code", "title": "Claude Code", "level": 3},
@@ -138,7 +139,7 @@ export const postRegistry: Post[] = [
         note: "Another NPU setup, tested in the benchmarks.",
       },
     ],
-    readingMinutes: 16,
+    readingMinutes: 18,
     // Rendered by scripts/covers/llms-on-an-intel-npu.tsx; the share image only
     cover: {
       visible: false,
@@ -152,7 +153,7 @@ export const postRegistry: Post[] = [
     description:
       "How to run Qwen3 8B on a Core Ultra NPU with OpenVINO Model Server, connect OpenWork and Claude Code to it, and how it compares with the CPU, iGPU and RTX 5080.",
     published: "2026-09-30",
-    updated: "2026-10-18",
+    updated: "2026-10-19",
     tags: ["OpenVINO", "Intel NPU", "Qwen3", "Claude Code", "Benchmarks"],
   },
 ];
