@@ -39,8 +39,10 @@ function fixtureHtml(post: PostRecord) {
     <meta name="description" content="${escape(post.description)}">
     <link rel="canonical" href="${absoluteUrl(post.path)}">
     <meta property="og:url" content="${absoluteUrl(post.path)}"><meta property="og:type" content="article">
-    <meta name="twitter:card" content="summary"><meta name="robots" content="index, follow"></head>
+    <meta name="twitter:card" content="${post.cover ? "summary_large_image" : "summary"}"><meta name="robots" content="index, follow">
+    ${post.cover ? `<meta property="og:image" content="${absoluteUrl(post.cover.src)}">` : ""}</head>
     <body><main><article><h1>${escape(post.title)}</h1><span>Logan Rios</span>
+    ${post.cover && post.cover.visible !== false ? `<figure><img src="${post.cover.src}" alt="${escape(post.cover.alt)}"></figure>` : ""}
     <time datetime="${post.published}">${post.published}</time>${post.updated ? `<time datetime="${post.updated}">${post.updated}</time>` : ""}
     <nav aria-label="Breadcrumb"><ol><li>Home</li><li>Blog</li><li>${escape(post.title)}</li></ol></nav>
     <nav aria-label="On this page">${post.sections.map(section => `<a href="#${section.id}">${section.title}</a>`).join("")}</nav>

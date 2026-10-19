@@ -149,6 +149,18 @@
   font-size: 0.875em;
   color: #e6f1ff;
 }
+/* Flags and names don't break at their hyphens; long ones go in a CodeBlock instead */
+.post :not(pre) > code {
+  white-space: nowrap;
+}
+/* A phone column is too narrow for that: a long name would run past the text,
+   so there they may wrap, anywhere if they must */
+@media (max-width: 768px) {
+  .post :not(pre) > code {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}
 
 /* Code blocks — commands, configs and the ASCII diagrams. Wide lines scroll
    sideways rather than wrapping, so the diagrams keep their shape. */

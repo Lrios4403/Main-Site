@@ -13,6 +13,8 @@ export type ArticleMedia = {
   alt: string;
   caption: string;
   credit?: { name: string; url: string };
+  // false: a cover used only as the share image, not shown in the article
+  visible?: boolean;
 };
 
 export type ArticleSection = { id: string; title: string; level: 2 | 3 | 4 };

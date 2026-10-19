@@ -13,7 +13,7 @@ export function checkSiteHtml(html: string, page: SitePage): void {
   const sameUrl = (value: string | undefined) => Boolean(value && new URL(value).href === canonical);
   require($("html").attr("lang")?.startsWith("en"), "missing English document language");
   require($("main").length === 1 && $("h1").length === 1, "expected one main and one H1");
-  require($("title").length === 1 && $("title").text() === (page.path === "/" ? page.title : `${page.title} | M4cgyver`), "wrong document title");
+  require($("head > title").length === 1 && $("head > title").text() === (page.path === "/" ? page.title : `${page.title} | M4cgyver`), "wrong document title");
   require($('meta[name="description"]').attr("content") === page.description, "wrong description");
   require($('link[rel="canonical"]').length === 1 && sameUrl($('link[rel="canonical"]').attr("href")), "wrong canonical");
   require(sameUrl($('meta[property="og:url"]').attr("content")), "wrong Open Graph URL");

@@ -85,8 +85,8 @@ export default function BlogNextJSOrderedTableLayout() {
         <p>Now, our project will have a similar structure, but we will use React components instead of plain HTML elements. Our structure of our projects is roughly going to be:</p>
         <CodeBlock kind="diagram" label="Project structure" code={projectStructure.trim()} />
         <p>
-          Next.js layouts wrap pages through their <code>children</code> prop,
-          and Next.js doesn&apos;t wrap <code>children</code> in any extra
+          Next.js layouts wrap pages through their <code>children</code>{" "}prop,
+          and Next.js doesn&apos;t wrap <code>children</code>{" "}in any extra
           elements. React fragments don&apos;t add any elements either. So when a
           page returns its pieces in a fragment, they become direct children of
           whatever element the layout renders <code>children</code> into. That
@@ -100,7 +100,7 @@ export default function BlogNextJSOrderedTableLayout() {
           The HTML example only had four areas: the header, the sidebar, the
           content and the footer. This project adds two more to the left column:
           a <code>stats</code> area with a page views counter, and a{" "}
-          <code>filler</code> area that stays empty. They are there to show that
+          <code>filler</code>{" "}area that stays empty. They are there to show that
           the side isn&apos;t limited to the navigation, and that we can keep
           adding pieces to it from any file.
         </p>
@@ -214,7 +214,7 @@ export default function BlogNextJSOrderedTableLayout() {
         </p>
         <p>
           The <code>&lt;main&gt;</code> element combines two classes:{" "}
-          <code>grid.content</code> places it, and <code>styles.main</code> from
+          <code>grid.content</code> places it, and <code>styles.main</code>{" "}from
           the page&apos;s own CSS module styles it.
         </p>
         <CodeBlock filename="app/page.tsx" code={homePageExample} language="tsx" />

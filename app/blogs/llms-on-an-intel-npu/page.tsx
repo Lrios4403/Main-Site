@@ -1,6 +1,10 @@
 import SiteLayout from "@/components/site-layout/SiteLayout";
-import { QuickStart, FirstDownload, VerificationNotes } from "./SetupNotes";
+import { WhatYouNeed, VerifyNpu, Troubleshooting, Glossary, UpdateNotes } from "./SetupNotes";
+import { Benchmarks } from "./Benchmarks";
+import ArticleTable from "@/components/article/ArticleTable";
 import { CodeBlock } from "@/components/article/CodeBlock";
+import ChartFigure from "@/components/article/charts/ChartFigure";
+import SetupDiagram from "@/components/article/charts/SetupDiagram";
 import type { Metadata } from "next";
 import { getPost } from "@/lib/posts";
 import { buildPostMetadata } from "@/lib/blog/metadata";
@@ -11,255 +15,98 @@ const info = getPost("llms-on-an-intel-npu");
 
 export const metadata: Metadata = buildPostMetadata(info);
 
+const REPO = "https://github.com/Lrios4403/Intel-Npu-Benchmarks";
 
 export default function BlogOpenVINOModelServerSetup() {
   return (
     <SiteLayout variant="detail">
     <ArticleShell post={info}>
-        <QuickStart />
-
-        <h2 id="abstract">Abstract</h2>
-
         <p>
-          I have an OMEN MAX Gaming Laptop 16 and recently I have been working
-          on a lot of side projects in my free time. I&apos;ve also been using
-          Claude a lot since I got this laptop to become Peter Thiel&apos;s most
-          feared 10x engineer.
+          My laptop has an Intel AI Boost NPU that sat idle while Claude burned through my token budget and the RTX
+          5080 did all the real work. I wanted the small, boring LLM jobs to run on that spare chip instead. There was
+          almost nothing written about how, so this post is what I worked out: how to run Qwen3 8B on the NPU with
+          OpenVINO Model Server, how to point OpenWork and Claude Code at it, and, after two days of benchmarks against
+          the CPU, the Intel iGPU and the RTX 5080, whether it&apos;s worth doing at all.
         </p>
 
-        <p>
-          Unfortunately, Claude has the habit of spawning more workflows, and
-          that just absolutely DRAINS my token usage and limits.
-        </p>
-
-        <p>
-          Eventually I wanted to use a locally hosted model for smaller tasks
-          and found out my laptop had an Intel AI Boost NPU that I could use
-          instead of my GPU. This lets me run smaller LLM workloads without
-          tying up the GPU while I am doing other work.
-        </p>
-
-        <p>
-          Then I realized there was very little documentation explaining how
-          to actually use this POS hardware chip for an LLM. After a lot of
-          experimenting, I managed to get Qwen running on the NPU through
-          OpenVINO.
-        </p>
-
-        <p>
-          This page documents the setup I ended up using for OpenVINO Model
-          Server, NoLlama, OpenWork, and Claude Code.
-        </p>
-
-        <hr />
-
-        <h2 id="backend">Backend Model Server</h2>
-
-        <p>
-          The frontend AI application and the model server are separate pieces.
-        </p>
-
-        <CodeBlock kind="diagram" code={`Frontend
-   |
-   | OpenAI / Anthropic compatible API
-   v
-Model Server
-   |
-   v
-OpenVINO
-   |
-   v
-Intel NPU`} />
-
-        <p>
-          For the backend, I have mainly used OpenVINO Model Server and
-          NoLlama.
-        </p>
-
-        <h3 id="ovms">OpenVINO Model Server</h3>
-
-        <h4 id="intel-npu-drivers">Prerequisites</h4>
-
+        <h2 id="tldr">The short version</h2>
         <ul>
           <li>
-            <strong>Python 3.12.X - Optional</strong>
-            <p>
-              OpenVINO Model Server has Windows packages with Python enabled
-              and Python disabled. Some additional features and model workflows
-              may require the Python-enabled package.
-            </p>
+            <strong>It works.</strong> Qwen3 8B runs on the NPU at about 10 tokens/s with working tool calls (20/20 in my
+            tests). The NPU sits at ~95% busy while the CPU stays at its idle load.
           </li>
-
           <li>
-            <strong>Intel NPU Drivers</strong>
-            <p>
-              Download and install the latest Intel NPU drivers from Intel:
-            </p>
-
-            <a
-              href="https://www.intel.com/content/www/us/en/download/794734/intel-npu-driver-windows.html"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Intel NPU Driver for Windows
-            </a>
+            <strong>It isn&apos;t fast.</strong> The CPU and the Intel iGPU generate at the same ~10 tokens/s. The RTX 5080
+            does ~100.
+          </li>
+          <li>
+            <strong>It stays out of the way.</strong>{" "}Under a full CPU load, NPU generation kept its speed and didn&apos;t slow
+            the other work. Running the model on the CPU instead lost 28% and slowed everything else by 11%.
+          </li>
+          <li>
+            <strong>It&apos;s a poor fit for interactive agents.</strong> Every answer waits ~4.5 s for the first token, a
+            cached 4k-token prompt still costs ~8 s per turn, thinking mode takes minutes, parallel requests queue, and
+            the loaded server holds ~15 GB of RAM. For agent-style use, the Intel iGPU is the better Intel option.
           </li>
         </ul>
+        <p>
+          The setup is Part 1 and 2. The numbers are in <a href="#benchmarks">Part 3</a>, and all the scripts and raw
+          data are on <a href={REPO} target="_blank" rel="noopener noreferrer">GitHub</a>.
+        </p>
 
-        <h4 id="install-ovms">Installation</h4>
+        <h2 id="setup">Part 1: Get the model running on the NPU</h2>
+        <p>
+          Two pieces: a model server that runs the model on the NPU, and a frontend that sends it requests. This part is
+          the server. It takes about 15 minutes, most of it the model download.
+        </p>
 
+        <WhatYouNeed />
+
+        <h3 id="install-ovms">Install OVMS</h3>
         <ol>
           <li>
-            <p>
-              Download OpenVINO Model Server from the official repository:
-            </p>
-
-            <a
-              href="https://github.com/openvinotoolkit/model_server"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              https://github.com/openvinotoolkit/model_server
-            </a>
-          </li>
-
-          <li>
-            <p>Extract OVMS somewhere on your computer.</p>
-
-            <p>For example:</p>
-
+            <p>Unzip the OVMS package somewhere, for example:</p>
             <CodeBlock kind="config" label="Setting" code={`C:\\Users\\YOUR_USERNAME\\Downloads\\ovms`} />
           </li>
-
           <li>
-            <p>
-              Open Command Prompt inside the OVMS directory and initialize the
-              OpenVINO environment:
-            </p>
-
-            <CodeBlock kind="command" code={"setupvars.bat"} />
+            <p>Open Command Prompt in that folder and initialize the OpenVINO environment. Do this in every new terminal you start OVMS from:</p>
+            <CodeBlock kind="command" language="cmd" code={"setupvars.bat"} />
           </li>
         </ol>
 
-        <h4>Useful OVMS Command Line Arguments</h4>
-
-        <ul>
-          <li>
-            <code>--rest_port 8000</code>
-            <p>
-              Starts the HTTP REST API on port 8000. The OpenAI-compatible API
-              is exposed through this server.
-            </p>
-          </li>
-
-          <li>
-            <code>--rest_bind_address 127.0.0.1</code>
-            <p>
-              Binds OVMS only to the local machine instead of exposing it to
-              other devices on the network.
-            </p>
-          </li>
-
-          <li>
-            <code>--rest_workers N</code>
-            <p>Controls the number of HTTP REST worker threads.</p>
-          </li>
-
-          <li>
-            <code>--port 9000</code>
-            <p>Enables the gRPC server on port 9000.</p>
-          </li>
-
-          <li>
-            <code>--grpc_workers N</code>
-            <p>Controls the number of gRPC worker threads.</p>
-          </li>
-
-          <li>
-            <code>--pull</code>
-            <p>
-              Prepares the requested model. Whether serving starts in the same invocation depends on the release and other arguments; check the first-download notes below.
-            </p>
-          </li>
-
-          <li>
-            <code>--source_model MODEL</code>
-            <p>
-              Specifies the source model. This can be a supported model
-              repository identifier such as an OpenVINO model hosted on
-              Hugging Face.
-            </p>
-          </li>
-
-          <li>
-            <code>--model_repository_path PATH</code>
-            <p>
-              Specifies where downloaded models should be stored locally.
-            </p>
-          </li>
-
-          <li>
-            <code>--model_name NAME</code>
-            <p>
-              Specifies the name OVMS exposes through its API.
-            </p>
-          </li>
-
-          <li>
-            <code>--task text_generation</code>
-            <p>
-              Tells OVMS that the model should be served using the text
-              generation pipeline.
-            </p>
-          </li>
-
-          <li>
-            <code>--target_device NPU</code>
-            <p>
-              Runs inference on the Intel NPU. Other OpenVINO targets can
-              include CPU, GPU, AUTO, and device-specific combinations.
-            </p>
-          </li>
-
-          <li>
-            <code>--tool_parser hermes3</code>
-            <p>
-              Enables parsing model-generated Hermes-style tool calls. This is
-              important when using the local model with agentic frontends that
-              expect tool calling.
-            </p>
-          </li>
-
-          <li>
-            <code>--max_prompt_len 16384</code>
-            <p>
-              Configures the maximum prompt/context length accepted by the
-              serving pipeline.
-            </p>
-          </li>
-
-          <li>
-            <code>--cache_dir .ovcache</code>
-            <p>
-              Stores OpenVINO&apos;s compiled model cache in the specified
-              directory so future startups can avoid recompiling everything
-              from scratch.
-            </p>
-          </li>
-        </ul>
-
-        <h4>Basic Example</h4>
-
-        <CodeBlock kind="command" label="Windows CMD" code={`ovms.exe --pull --rest_port 8000 --source_model OpenVINO/Qwen2-0.5B-int4-ov --model_repository_path ".\\models" --task text_generation`} />
-
-        <FirstDownload />
-        <h4 id="launch-qwen3">NPU Qwen3 Example — subsequent launch</h4>
-
+        <h3 id="download-qwen3">Download the model (the cw one)</h3>
         <p>
-          This is the configuration I use for Qwen3 8B on the Intel NPU:
+          Download the channel-wise int4 export of Qwen3 8B into a model repository folder. The <code>-cw-</code> part
+          matters: the plain <code>OpenVINO/Qwen3-8B-int4-ov</code> export fails to compile on this NPU generation, which
+          is exactly what happened on my first try.
+        </p>
+        <CodeBlock kind="command" label="Download" variants={[
+          {
+            label: "CMD · hf CLI",
+            language: "cmd",
+            code: `hf download OpenVINO/Qwen3-8B-int4-cw-ov --local-dir "%USERPROFILE%\\Downloads\\models\\OpenVINO\\Qwen3-8B-int4-cw-ov"`,
+            note: <>No Python needed. No <code>hf</code> yet? Install it once with{" "}
+              <code>powershell -ExecutionPolicy ByPass -c &quot;irm https://hf.co/cli/install.ps1 | iex&quot;</code>, then open
+              a new terminal.</>,
+          },
+          {
+            label: "CMD · Python",
+            language: "cmd",
+            code: `python -c "from huggingface_hub import snapshot_download; snapshot_download('OpenVINO/Qwen3-8B-int4-cw-ov', local_dir=r'%USERPROFILE%\\Downloads\\models\\OpenVINO\\Qwen3-8B-int4-cw-ov')"`,
+            note: <>Needs <code>pip install huggingface_hub</code> first.</>,
+          },
+        ]} />
+        <p>
+          OVMS can also fetch it with <code>--pull</code> (see the{" "}
+          <a href="https://docs.openvino.ai/2026/model-server/ovms_docs_pull.html">model preparation docs</a>). Either way
+          the folder layout is <code>models\OpenVINO\Qwen3-8B-int4-cw-ov</code>.
         </p>
 
-        <CodeBlock kind="command" label="Windows CMD" code={`ovms.exe ^
+        <h3 id="launch-qwen3">Start the server</h3>
+        <p>
+          From the OVMS folder, after <code>setupvars.bat</code>. This is the one command the rest of the post refers to:
+        </p>
+        <CodeBlock kind="command" label="Windows CMD" language="cmd" code={`ovms.exe ^
   --rest_port 8000 ^
   --model_repository_path "%USERPROFILE%\\Downloads\\models" ^
   --source_model OpenVINO/Qwen3-8B-int4-cw-ov ^
@@ -270,166 +117,44 @@ Intel NPU`} />
   --max_prompt_len 16384 ^
   --plugin_config "{\\"NPUW_LLM_PREFILL_ATTENTION_HINT\\":\\"PYRAMID\\"}" ^
   --cache_dir .ovcache`} />
-
-        <p>To verify that OVMS loaded the model, run:</p>
-
-        <CodeBlock kind="command" code={"curl http://localhost:8000/v3/models"} />
-
-        <p>You should see a model named:</p>
-
-        <CodeBlock kind="config" label="Setting" code={"Qwen3-8B"} />
-
         <p>
-          The original client configurations below use this API base; verify it against your installed OVMS release (see the inference check):
+          The first launch compiles the model for the NPU, about 70 seconds, and saves the ~760 MB result in{" "}
+          <code>.ovcache</code>. After that it&apos;s ready in about 30 seconds. What the flags do, and what I measured for them:
         </p>
+        <ArticleTable caption="The launch flags" columns={["Flag", "What it does", "Measured"]} rows={[
+          [<code key="1">--target_device NPU</code>, "Runs inference on the NPU. CPU and GPU.0 (the Intel iGPU) also work with the same command.", "See the benchmarks"],
+          [<code key="2">--max_prompt_len 16384</code>, "The longest prompt the NPU will accept, compiled into the model. Longer prompts get an HTTP 400.", "Costs RAM: ~3.6 GB committed at 1,024, ~11.3 GB at 16,384. The first-token wait is the same either way."],
+          [<code key="3">--plugin_config</code>, "Sets the NPU prefill attention hint to PYRAMID.", "Cut the first 16k compile from 514 s to 69 s, and was the only 16k setting whose cache reloaded reliably."],
+          [<code key="4">--tool_parser hermes3</code>, "Turns Qwen3's tool-call output into structured calls, which agent frontends need.", "20/20 tool-call cases passed."],
+          [<code key="5">--cache_dir .ovcache</code>, "Keeps the compiled model so later launches skip the compile.", "Launch time 69 s → ~30 s."],
+          [<code key="6">--model_name Qwen3-8B</code>, "The name clients must use, case included.", "—"],
+          [<code key="7">--rest_port 8000</code>, "The HTTP API. Both /v1 and /v3 paths answer.", "—"],
+        ]} />
+        <p>Check that the model is loaded:</p>
+        <CodeBlock kind="command" language="cmd" code={"curl http://localhost:8000/v3/models"} />
+        <p>It should list a model named <code>Qwen3-8B</code>.</p>
 
-        <CodeBlock kind="config" label="Setting" code={"http://localhost:8000/v1"} />
+        <VerifyNpu />
 
-        <hr />
-
-        <h3 id="nollama">NoLlama</h3>
-
+        <h2 id="frontend">Part 2: Connect an AI assistant</h2>
         <p>
-          NoLlama provides another way to run OpenVINO-backed LLMs while
-          exposing an OpenAI-compatible API.
+          Any client that speaks the OpenAI chat API can use the server at <code>http://localhost:8000/v1</code>. Claude
+          Code speaks Anthropic&apos;s API instead, so it needs a translator in between. Here&apos;s how the pieces fit:
         </p>
-
-        <h4>Prerequisites</h4>
-
-        <ul>
-          <li>Python 3.X</li>
-
-          <li>
-            OpenVINO libraries
-            <p>
-              NoLlama&apos;s installation script should install the required Python
-              packages using pip.
-            </p>
-          </li>
-
-          <li>
-            Intel NPU drivers if you want to run the model on the NPU.
-          </li>
-        </ul>
-
-        <h4>Setup</h4>
-
-        <ol>
-          <li>
-            <p>Clone the repository:</p>
-
-            <CodeBlock kind="command" code={"git clone https://github.com/aweussom/NoLlama.git"} />
-
-            <p>Repository:</p>
-
-            <a
-              href="https://github.com/aweussom/NoLlama"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              https://github.com/aweussom/NoLlama
-            </a>
-
-            <p>Releases:</p>
-
-            <a
-              href="https://github.com/aweussom/NoLlama/releases"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              https://github.com/aweussom/NoLlama/releases
-            </a>
-          </li>
-
-          <li>
-            <p>Run the installation script:</p>
-
-            <CodeBlock kind="command" code={".\\install.ps1"} />
-          </li>
-
-          <li>
-            <p>Start NoLlama:</p>
-
-            <CodeBlock kind="command" code={".\\start.ps1"} />
-          </li>
-        </ol>
-
-        <p>Verify that the server is running:</p>
-
-        <CodeBlock kind="command" code={"curl http://localhost:8000/v1/models"} />
-
-        <p>
-          NoLlama exposes an OpenAI-compatible server at:
-        </p>
-
-        <CodeBlock kind="config" label="Setting" code={"http://localhost:8000/v1"} />
-
-        <hr />
-
-        <h2 id="frontend">Frontend AI Assistants</h2>
-
-        <p>
-          Once an OpenAI-compatible backend is running, different frontend
-          applications can connect to it.
-        </p>
+        <ChartFigure title="The local setup" subtitle="Two clients, one model server, the NPU.">
+          <SetupDiagram id="diagram-setup" />
+        </ChartFigure>
 
         <h3 id="openwork">OpenWork</h3>
-
-        <p>
-          OpenWork uses OpenCode internally and can directly use an
-          OpenAI-compatible provider.
-        </p>
-
-        <h4>OpenWork With OVMS</h4>
-
+        <p>OpenWork uses OpenCode internally, which can talk to any OpenAI-compatible provider.</p>
         <ol>
           <li>
-            <p>
-              In the OVMS folder, run <code>setupvars.bat</code>.
-            </p>
-          </li>
-
-          <li>
-            <p>Start Qwen3 8B:</p>
-
-            <CodeBlock kind="command" label="Windows CMD" code={`ovms.exe ^
-  --rest_port 8000 ^
-  --model_repository_path "%USERPROFILE%\\Downloads\\models" ^
-  --source_model OpenVINO/Qwen3-8B-int4-cw-ov ^
-  --model_name Qwen3-8B ^
-  --task text_generation ^
-  --target_device NPU ^
-  --tool_parser hermes3 ^
-  --max_prompt_len 16384 ^
-  --plugin_config "{\\"NPUW_LLM_PREFILL_ATTENTION_HINT\\":\\"PYRAMID\\"}" ^
-  --cache_dir .ovcache`} />
-          </li>
-
-          <li>
-            <p>
-              Check that OVMS is running and that the model is named
-              Qwen3-8B:
-            </p>
-
-            <CodeBlock kind="command" code={"curl http://localhost:8000/v3/models"} />
-          </li>
-
-          <li>
-            <p>
-              Open your OpenWork workspace directory.
-            </p>
-
-            <p>The default is typically:</p>
-
+            <p>With OVMS running, open your OpenWork workspace folder, usually:</p>
             <CodeBlock kind="config" label="Setting" code={`%USERPROFILE%\\OpenWork Chat`} />
           </li>
-
           <li>
-            <p>
-              Replace the contents of <code>opencode.jsonc</code> with:
-            </p>
-
-            <CodeBlock kind="config" label="JSON configuration" code={`{
+            <p>Replace the contents of <code>opencode.jsonc</code> with:</p>
+            <CodeBlock kind="config" label="JSON configuration" language="json" code={`{
   "$schema": "https://opencode.ai/config.json",
   "disabled_providers": [
     "opencode"
@@ -458,494 +183,89 @@ Intel NPU`} />
   "model": "ovms/Qwen3-8B"
 }`} />
           </li>
-
-          <li>
-            <p>Restart OpenWork.</p>
-          </li>
-
-          <li>
-            <p>Open the model picker and select:</p>
-
-            <CodeBlock kind="config" label="Setting" code={"Qwen3 8B int4 (OVMS NPU)"} />
-          </li>
-
-          <li>
-            <p>
-              The first response can be considerably slower because OpenVINO
-              may still be compiling and caching portions of the model.
-            </p>
-          </li>
+          <li><p>Restart OpenWork completely (it doesn&apos;t pick up config changes otherwise) and choose <strong>Qwen3 8B int4 (OVMS NPU)</strong> in the model picker.</p></li>
         </ol>
-
-        <h4>OpenWork With NoLlama</h4>
-
-        <ol>
-          <li>
-            <p>Start NoLlama:</p>
-
-            <CodeBlock kind="command" code={".\\start.ps1"} />
-          </li>
-
-          <li>
-            <p>Find the model ID exposed by NoLlama:</p>
-
-            <CodeBlock kind="command" code={"curl http://localhost:8000/v1/models"} />
-          </li>
-
-          <li>
-            <p>
-              Configure OpenWork using the same OpenAI-compatible provider,
-              replacing the model ID with the ID returned by NoLlama:
-            </p>
-
-            <CodeBlock kind="config" label="JSON configuration" code={`{
-  "$schema": "https://opencode.ai/config.json",
-  "disabled_providers": [
-    "opencode"
-  ],
-  "provider": {
-    "nollama": {
-      "npm": "@ai-sdk/openai-compatible",
-      "name": "NoLlama Local",
-      "options": {
-        "baseURL": "http://localhost:8000/v1",
-        "apiKey": "nollama-local"
-      },
-      "models": {
-        "YOUR-MODEL-ID": {
-          "name": "NoLlama Local Model",
-          "tool_call": true,
-          "reasoning": true,
-          "limit": {
-            "context": 16384,
-            "output": 4096
-          }
-        }
-      }
-    }
-  },
-  "model": "nollama/YOUR-MODEL-ID"
-}`} />
-          </li>
-        </ol>
-
-        <h4>OpenWork Troubleshooting</h4>
-
-        <ul>
-          <li>
-            <strong>HTTP 404</strong>
-            <p>
-              Make sure the model name in <code>opencode.jsonc</code> exactly
-              matches the model exposed by the backend.
-            </p>
-
-            <p>
-              For OVMS, the OpenWork model ID must match{" "}
-              <code>--model_name</code>, including capitalization.
-            </p>
-          </li>
-
-          <li>
-            <strong>Model does not appear</strong>
-            <p>
-              Completely restart OpenWork after changing{" "}
-              <code>opencode.jsonc</code>.
-            </p>
-          </li>
-
-          <li>
-            <strong>Tools are not working correctly</strong>
-            <p>
-              Make sure OVMS was started with a tool parser compatible with the
-              model, such as:
-            </p>
-
-            <CodeBlock kind="command" code={"--tool_parser hermes3"} />
-          </li>
-        </ul>
-
-        <hr />
+        <p>
+          Expect at least ~4.5 seconds before each answer starts, and longer the first time a big prompt is sent. Prompt
+          caching speeds up later turns (see <a href="#bench-caching">Prompt caching</a>). A 404 means the model ID in the
+          config doesn&apos;t match <code>--model_name</code>.
+        </p>
 
         <h3 id="claude-code">Claude Code</h3>
-
         <p>
-          Claude Code is slightly different from OpenWork.
+          Claude Code sends Anthropic Messages API requests, so it can&apos;t be pointed at OVMS directly. Claude Code Router
+          sits in between and translates. This is for <strong>Claude Code</strong> only. The Claude desktop and web apps have
+          no setting that swaps Claude for a local model.
         </p>
-
-        <p>
-          OVMS and NoLlama expose an OpenAI-compatible API. Claude Code,
-          however, normally communicates using Anthropic&apos;s Messages API.
-        </p>
-
-        <p>
-          Because the protocols are different, Claude Code cannot simply be
-          pointed directly at:
-        </p>
-
-        <CodeBlock kind="config" label="Setting" code={"http://localhost:8000/v1"} />
-
-        <p>
-          Instead, I use Claude Code Router as a local compatibility layer:
-        </p>
-
-        <CodeBlock kind="diagram" code={`Claude Code
-     |
-     | Anthropic Messages API
-     v
-Claude Code Router
-http://127.0.0.1:3456
-     |
-     | OpenAI-compatible Chat API
-     v
-OVMS / NoLlama
-http://127.0.0.1:8000/v1
-     |
-     v
-Qwen
-     |
-     v
-Intel NPU`} />
-
-        <h4>Prerequisites</h4>
-
-        <ul>
-          <li>Node.js 22 or newer</li>
-          <li>Claude Code</li>
-          <li>Claude Code Router</li>
-          <li>A running OVMS or NoLlama server</li>
-        </ul>
-
-        <h4>Install Claude Code</h4>
-
-        <p>Check your Node.js version:</p>
-
-        <CodeBlock kind="command" code={"node --version"} />
-
-        <p>Install Claude Code:</p>
-
-        <CodeBlock kind="command" code={"npm install -g @anthropic-ai/claude-code"} />
-
-        <p>Install Claude Code Router:</p>
-
-        <CodeBlock kind="command" code={"npm install -g @musistudio/claude-code-router"} />
-
-        <h4>Claude Code With OVMS</h4>
-
         <ol>
           <li>
-            <p>
-              Start OVMS using the same Qwen3 configuration:
-            </p>
-
-            <CodeBlock kind="command" label="Windows CMD" code={`ovms.exe ^
-  --rest_port 8000 ^
-  --model_repository_path "%USERPROFILE%\\Downloads\\models" ^
-  --source_model OpenVINO/Qwen3-8B-int4-cw-ov ^
-  --model_name Qwen3-8B ^
-  --task text_generation ^
-  --target_device NPU ^
-  --tool_parser hermes3 ^
-  --max_prompt_len 16384 ^
-  --plugin_config "{\\"NPUW_LLM_PREFILL_ATTENTION_HINT\\":\\"PYRAMID\\"}" ^
-  --cache_dir .ovcache`} />
+            <p>Install both (Node.js 22 or newer):</p>
+            <CodeBlock kind="command" language="cmd" code={`npm install -g @anthropic-ai/claude-code
+npm install -g @musistudio/claude-code-router`} />
           </li>
-
           <li>
-            <p>Make sure the model loaded:</p>
-
-            <CodeBlock kind="command" code={"curl http://localhost:8000/v3/models"} />
+            <p>With OVMS running, open the router&apos;s configuration UI:</p>
+            <CodeBlock kind="command" language="cmd" code={"ccr ui"} />
+            <p>It opens at <code>http://127.0.0.1:3458</code>{" "}if it doesn&apos;t appear on its own.</p>
           </li>
-
           <li>
-            <p>Start the Claude Code Router configuration interface:</p>
-
-            <CodeBlock kind="command" code={"ccr ui"} />
-          </li>
-
-          <li>
-            <p>
-              Open the Claude Code Router configuration UI if it did not open
-              automatically:
-            </p>
-
-            <CodeBlock kind="config" label="Setting" code={"http://127.0.0.1:3458"} />
-          </li>
-
-          <li>
-            <p>
-              Go to the provider configuration and add a custom provider for
-              OVMS.
-            </p>
-
+            <p>Add a custom provider for OVMS. If the router auto-detects the wrong protocol, turn auto-detection off and pick OpenAI Chat:</p>
             <CodeBlock kind="config" label="Setting" code={`Name: OVMS Local
-
-API Endpoint:
-http://127.0.0.1:8000/v1
-
-API Key:
-ovms-local
-
-Protocol:
-OpenAI Chat
-
-Model:
-Qwen3-8B`} />
+API Endpoint: http://127.0.0.1:8000/v1
+API Key: ovms-local
+Protocol: OpenAI Chat
+Model: Qwen3-8B`} />
           </li>
-
-          <li>
-            <p>
-              If Claude Code Router automatically detects the wrong protocol,
-              disable automatic protocol detection and explicitly select:
-            </p>
-
-            <CodeBlock kind="config" label="Setting" code={"OpenAI Chat"} />
-          </li>
-
-          <li>
-            <p>Run the provider connection test.</p>
-
-            <p>
-              A successful response means Claude Code Router can communicate
-              with OVMS.
-            </p>
-          </li>
-
-          <li>
-            <p>Save the provider.</p>
-          </li>
-
-          <li>
-            <p>
-              In Claude Code Router, create a local API/client key if your
-              configuration requires one.
-            </p>
-
-            <p>
-              This does not need to be a real Anthropic API key. It is simply
-              used by the local router.
-            </p>
-          </li>
-
-          <li>
-            <p>Start the Claude Code Router server.</p>
-
-            <p>Its local gateway normally runs at:</p>
-
-            <CodeBlock kind="config" label="Setting" code={"http://127.0.0.1:3456"} />
-          </li>
-
-          <li>
-            <p>
-              Create or select a Claude Code profile that uses the OVMS Local
-              provider and <code>Qwen3-8B</code>.
-            </p>
-          </li>
-
-          <li>
-            <p>Launch Claude Code through Claude Code Router.</p>
-
-            <CodeBlock kind="command" code={"ccr code"} />
-          </li>
-
-          <li>
-            <p>Send a test message.</p>
-
-            <p>The request path should now be:</p>
-
-            <CodeBlock kind="diagram" code={`Claude Code
-    ->
-Claude Code Router
-    ->
-OVMS
-    ->
-Qwen3-8B
-    ->
-Intel NPU`} />
+          <li><p>Run the provider&apos;s connection test, save it, and create a local client key if the router asks for one. It doesn&apos;t need to be a real Anthropic key.</p></li>
+          <li><p>Start the router&apos;s gateway (it listens on <code>http://127.0.0.1:3456</code>), select the OVMS provider and <code>Qwen3-8B</code> in a profile, and launch Claude Code through it:</p>
+            <CodeBlock kind="command" language="cmd" code={"ccr code"} />
           </li>
         </ol>
-
-        <h4>Claude Code With NoLlama</h4>
-
         <p>
-          NoLlama uses the same basic Claude Code Router configuration because
-          it also exposes an OpenAI-compatible server.
+          Requests now go Claude Code → router → OVMS → Qwen3 on the NPU. Claude Code sends long prompts (its system prompt
+          plus tool definitions) on every turn, which is the NPU&apos;s weak spot: expect the first turn of a session to take a
+          while, then ~8–15 s per cached turn, ~8 s per tool call, and minutes per answer if thinking is on. It&apos;s best for
+          small background jobs, not for sitting and waiting.
         </p>
 
-        <ol>
-          <li>
-            <p>Start NoLlama:</p>
-
-            <CodeBlock kind="command" code={".\\start.ps1"} />
-          </li>
-
-          <li>
-            <p>Check which model IDs NoLlama exposes:</p>
-
-            <CodeBlock kind="command" code={"curl http://localhost:8000/v1/models"} />
-          </li>
-
-          <li>
-            <p>Add another provider in Claude Code Router:</p>
-
-            <CodeBlock kind="config" label="Setting" code={`Name: NoLlama Local
-
-API Endpoint:
-http://127.0.0.1:8000/v1
-
-API Key:
-nollama-local
-
-Protocol:
-OpenAI Chat
-
-Model:
-YOUR-MODEL-ID`} />
-          </li>
-
-          <li>
-            <p>
-              Replace <code>YOUR-MODEL-ID</code> with the exact model ID
-              returned by:
-            </p>
-
-            <CodeBlock kind="command" code={"curl http://localhost:8000/v1/models"} />
-          </li>
-
-          <li>
-            <p>Test the provider and save it.</p>
-          </li>
-
-          <li>
-            <p>
-              Select the NoLlama provider/model in your Claude Code Router
-              profile.
-            </p>
-          </li>
-
-          <li>
-            <p>Launch Claude Code through the router:</p>
-
-            <CodeBlock kind="command" code={"ccr code"} />
-          </li>
-        </ol>
-
-        <h4>Important: Claude Code vs Claude Desktop</h4>
-
+        <h3 id="nollama">Alternative backend: NoLlama</h3>
         <p>
-          This setup is specifically for <strong>Claude Code</strong>.
+          <a href="https://github.com/aweussom/NoLlama" target="_blank" rel="noopener noreferrer">NoLlama</a> is a lighter
+          Python server that also runs OpenVINO models with an OpenAI-compatible API on the same port. Clone it, run{" "}
+          <code>.\install.ps1</code> then <code>.\start.ps1</code>, and read the model ID from{" "}
+          <code>curl http://localhost:8000/v1/models</code>. Both frontends above work the same way with it, with that model
+          ID in place of <code>Qwen3-8B</code>. I haven&apos;t benchmarked it; everything in Part 3 used OVMS.
         </p>
 
-        <p>
-          The normal Claude website or Claude Desktop chat application does not
-          provide a setting that simply replaces Anthropic&apos;s Claude model with
-          an arbitrary OpenAI-compatible local LLM.
-        </p>
+        <Benchmarks />
 
-        <p>
-          Claude Desktop can use local MCP servers for tools and external
-          information, but that is different from replacing Claude itself with
-          Qwen running through OVMS.
-        </p>
-
-        <h4>Claude Code Troubleshooting</h4>
-
+        <h2 id="verdict">Verdict: which device should run your local model?</h2>
         <ul>
           <li>
-            <strong>Claude Code still contacts Anthropic</strong>
-            <p>
-              Make sure Claude Code was launched through Claude Code Router
-              rather than by running Claude normally.
-            </p>
-
-            <CodeBlock kind="command" code={"ccr code"} />
+            <strong>The NPU</strong> is a good background helper: summaries, tagging, small scripted jobs. It runs about 10
+            tokens/s without touching the CPU or GPU and without throttling. Accept the ~4.5 second wait before each
+            answer, keep prompts short, and budget ~15 GB of RAM for it.
           </li>
-
           <li>
-            <strong>HTTP 404 from OVMS</strong>
-            <p>
-              The router&apos;s model name must exactly match the OVMS model name.
-            </p>
-
-            <p>For this example:</p>
-
-            <CodeBlock kind="command" code={`--model_name Qwen3-8B
-
-Model in Claude Code Router:
-Qwen3-8B`} />
+            <strong>The Intel iGPU</strong> (same command, <code>--target_device GPU.0</code>) is the better Intel option
+            for agents. Generation speed is the same, but its prompt caching gets repeat turns down to ~1.5–2 seconds, it
+            batches parallel requests, and the server holds a third of the RAM. It also leaves the CPU alone.
           </li>
-
           <li>
-            <strong>Normal chat works but tools fail</strong>
-            <p>
-              This normally means the base model request is working but tool
-              call serialization or parsing is not.
-            </p>
-
-            <p>
-              Make sure OVMS was started with the appropriate tool parser:
-            </p>
-
-            <CodeBlock kind="command" code={"--tool_parser hermes3"} />
+            <strong>The RTX 5080</strong> is about 10x faster at everything, if you can spare it and its ~95 W.
           </li>
-
           <li>
-            <strong>Very slow first response</strong>
-            <p>
-              The first request after starting OVMS may require OpenVINO to
-              compile the model for the NPU. The compiled model cache helps
-              reduce this on later launches.
-            </p>
-
-            <CodeBlock kind="command" code={"--cache_dir .ovcache"} />
+            <strong>Not the CPU</strong>, if you&apos;re doing anything else: it slowed my other work by 11% and lost 28% itself.
           </li>
         </ul>
-
-        <hr />
-
-        <h2 id="final-setup">Final Setup</h2>
-
         <p>
-          The entire local setup ends up looking roughly like this:
+          So the chip I set out to use turned out to be the right one for exactly one job: cheap, slow, unattended work,
+          which is what I wanted it for. For anything I&apos;m waiting on, the iGPU or the RTX.
         </p>
 
-        <h3>OpenWork</h3>
-
-        <CodeBlock kind="diagram" code={`OpenWork
-   |
-   | OpenAI-compatible API
-   v
-OVMS / NoLlama
-   |
-   v
-OpenVINO
-   |
-   v
-Intel AI Boost NPU`} />
-
-        <h3>Claude Code</h3>
-
-        <CodeBlock kind="diagram" code={`Claude Code
-   |
-   | Anthropic Messages API
-   v
-Claude Code Router
-   |
-   | OpenAI-compatible API
-   v
-OVMS / NoLlama
-   |
-   v
-OpenVINO
-   |
-   v
-Intel AI Boost NPU`} />
-
-        <p>
-          This gives me a small local model for background tasks, basic coding
-          work, tool calls, and agent workflows without burning Claude tokens
-          or occupying the laptop&apos;s RTX GPU.
-        </p>
-        <VerificationNotes />
+        <Troubleshooting />
+        <Glossary />
+        <UpdateNotes />
     </ArticleShell>
     </SiteLayout>
   );

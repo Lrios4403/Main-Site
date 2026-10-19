@@ -12,7 +12,7 @@ export function checkPostHtml(html: string, post: PostRecord): void {
   require($("main").length === 1, "expected one main landmark");
   require($("article").length === 1 && $("article h1").length === 1 && $("h1").length === 1, "expected one article H1");
   require($("article h1").text() === post.title, "wrong article title");
-  require($("title").length === 1 && $("title").text() === `${post.seoTitle ?? post.title} | M4cgyver`, "wrong document title");
+  require($("head > title").length === 1 && $("head > title").text() === `${post.seoTitle ?? post.title} | M4cgyver`, "wrong document title");
   require($('meta[name="description"]').attr("content") === post.description, "wrong description");
   require($('link[rel="canonical"]').length === 1 && $('link[rel="canonical"]').attr("href") === canonical, "wrong canonical");
   require($('meta[property="og:url"]').attr("content") === canonical, "wrong OG URL");
@@ -54,7 +54,7 @@ export function checkPostHtml(html: string, post: PostRecord): void {
   require(!$("article").text().includes("Fuckass models didn't work"), "exposed debug text");
   $("article img").each((_, element) => require($(element).attr("alt") !== undefined, "image missing alt"));
   if (post.cover) {
-    require($("article figure img").length > 0, "missing cover figure");
+    if (post.cover.visible !== false) require($("article figure img").length > 0, "missing cover figure");
     require($('meta[property="og:image"]').attr("content") === absoluteUrl(post.cover.src), "wrong cover preview");
   } else require(article.image === undefined, "invented representative image");
 }

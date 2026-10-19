@@ -37,7 +37,7 @@ const slides: Slide[] = [
     image: intelNpu,
     category: "AI experiments",
     title: "Local AI, different silicon",
-    description: "Running Qwen3 8B on an Intel AI Boost NPU with OpenVINO and Claude Code.",
+    description: "Running Qwen3 8B on an Intel AI Boost NPU, and benchmarking it against the CPU, iGPU and RTX 5080.",
   },
 ];
 

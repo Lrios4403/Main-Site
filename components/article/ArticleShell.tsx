@@ -25,7 +25,7 @@ export default function ArticleShell({ post, children }: { post: PostRecord; chi
           {index === crumbs.length - 1 ? <span aria-current="page">{crumb.name}</span> : <Link href={crumb.path}>{crumb.name}</Link>}
         </li>)}
       </ol></nav>
-      {post.cover && <ArticleFigure media={post.cover} />}
+      {post.cover && post.cover.visible !== false && <ArticleFigure media={post.cover} />}
       {children}
       <ArticleRelated post={post} />
     </ArticleLayout>
