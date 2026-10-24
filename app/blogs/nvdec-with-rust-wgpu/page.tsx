@@ -339,7 +339,56 @@ export default function NvdecWithRustWgpu() {
           <strong>Where we are:</strong> the project builds. Now I need the bridge to open a file and produce decoded frames
           in GPU memory. All of Part 3 is <code>native/video_bridge.cu</code>, in the order the bridge does things at
           startup: open the file, find the GPU, set up the decoder, then the per-frame loop, then the textures the frames
-          go into. The bridge is one C++ object, <code>Bridge</code>, that owns everything.
+          go into. The bridge is one C++ object, <code>Bridge</code>, that owns everything, and every step below calls a
+          few small helpers on it. So before the steps, the object and the helpers.
+        </p>
+
+        <h3 id="bridge-object">The Bridge object and its helpers</h3>
+        <p>
+          Everything the native side knows lives in one struct. I&apos;m showing it first so that when a later excerpt
+          reads or writes a field, you&apos;ve already seen where it came from:
+        </p>
+        <Source excerpt={src.bridgeState} language="cpp" />
+        <ul>
+          <li><strong>Lines 79–81:</strong> the Media Foundation reader and the compressed media type (Step 3), and the
+            D3D12 device the textures are created on (Step 7).</li>
+          <li><strong>Line 82:</strong> whether COM and Media Foundation were started, so the destructor only shuts down
+            what was actually started.</li>
+          <li><strong>Line 83:</strong> the end-of-file state machine (Step 6): <code>has_eos</code> is set when the reader
+            hits the end, <code>flushed</code> once the parser has been told.</li>
+          <li><strong>Lines 84–85:</strong> the picture size from the media type, and the coded size from the sequence
+            callback, kept separately so a mid-stream size change can be detected (Step 5).</li>
+          <li><strong>Lines 86–89:</strong>{" "}the codec, the parameter sets, the scratch buffer each converted packet is built
+            in (reused every packet, so nothing is allocated per frame), and the stream&apos;s NAL framing (Step 3).</li>
+          <li><strong>Line 90:</strong> <code>decoded</code>, the queue of frames ready to show, in display order. The
+            display callback appends to it (Step 5) and the per-frame loop drains it (Step 6).</li>
+          <li><strong>Lines 91–94:</strong> the CUDA context (Step 4), the parser and decoder (Step 5), and the three
+            texture slots (Step 7).</li>
+          <li><strong>Lines 95–98:</strong>{" "}the first error message, which slot was written last, and the two timestamp
+            fields that turn the file&apos;s absolute timestamps into ones relative to the first frame (Step 6).</li>
+        </ul>
+        <p>
+          Then the helpers. Nearly every line in the steps that follows ends in one of these, so they&apos;re worth a
+          minute:
+        </p>
+        <Source excerpt={src.helpers} language="cpp" />
+        <p>
+          <strong>Three ways to report an error</strong>, because the file talks to three kinds of API. <code>fail</code>{" "}
+          takes a plain message, and is what the Media Foundation and D3D12 code uses after checking an <code>HRESULT</code>.{" "}
+          <code>check</code> takes a CUDA <em>driver</em>-API result (<code>CUresult</code>, from functions starting with{" "}
+          <code>cu</code>, which is what NVCUVID returns too) and looks up its name. <code>check_cuda</code> takes a CUDA{" "}
+          <em>runtime</em>-API result (<code>cudaError_t</code>, from functions starting with <code>cuda</code>) and looks
+          up its description. All three print to stderr immediately and return <code>false</code>, which is why call sites
+          throughout the file read as <code>if (!check(...)) return false;</code>. Line 101 is a small but useful rule:
+          only the <em>first</em> error is kept in <code>error</code>, because the first one is the cause and the ones
+          after it are usually consequences. That first message is what Rust gets back through <code>nv_error</code>{" "}
+          (Step 8).
+        </p>
+        <p>
+          <strong><code>push</code> and <code>pop</code></strong>{" "}(lines 119–120) make the bridge&apos;s CUDA context current
+          on the thread and un-make it. Every method that does CUDA work is wrapped in them. Step 4 explains why, once the
+          context exists; for now, read <code>push()</code>{" "}as &ldquo;about to do CUDA work&rdquo; and <code>pop()</code>{" "}
+          as &ldquo;done&rdquo;.
         </p>
 
         <h3 id="read-packets">Step 3: Read compressed packets</h3>
@@ -356,6 +405,16 @@ export default function NvdecWithRustWgpu() {
           already initialized COM on the UI thread in &ldquo;single-threaded apartment&rdquo; mode. Asking for
           multithreaded mode then fails with <code>RPC_E_CHANGED_MODE</code>, which isn&apos;t really an error, just COM
           saying the thread is already set up differently. So the bridge accepts whichever mode the thread has.
+        </p>
+        <p>
+          Line 147 calls the one helper that isn&apos;t on the <code>Bridge</code>. Rust hands the file path over as a UTF-8
+          C string (Step 8), and Media Foundation wants a UTF-16 wide string:
+        </p>
+        <Source excerpt={src.utf8} language="cpp" />
+        <p>
+          One call to measure, one to convert, and the trailing NUL that <code>MultiByteToWideChar</code> counts is dropped.{" "}
+          <code>MB_ERR_INVALID_CHARS</code> makes malformed UTF-8 an error (an empty result, which line 148 turns into a{" "}
+          <code>fail</code>) rather than a garbled path.
         </p>
         <p>Now the part that matters: configuring the reader so it does <em>not</em> decode.</p>
         <Source excerpt={src.openReader} language="cpp" />
@@ -455,9 +514,11 @@ export default function NvdecWithRustWgpu() {
         <p>
           Lines 212–214 are a small discipline I adopted after getting bitten. <code>cuCtxCreate</code> makes the new
           context current on the thread, implicitly. I pop it straight back off, and from then on every function that does
-          CUDA work pushes the context first and pops it after (<code>push()</code> and <code>pop()</code> are one-line
-          helpers on the bridge). That way nothing depends on which context happens to be current on the thread, which
-          matters because winit, wgpu and the decoder callbacks all share that thread.
+          CUDA work pushes the context first and pops it after, with the <code>push()</code> and <code>pop()</code>{" "}
+          helpers from <a href="#bridge-object">the Bridge section</a>. That way nothing depends on which context happens
+          to be current on the thread, which matters because winit, wgpu and the decoder callbacks all share that thread.
+          You&apos;ll see the same pair around every CUDA call from here on: in <code>read_packet</code>, in{" "}
+          <code>next</code>, and in the destructor.
         </p>
 
         <h3 id="parser-and-decoder">Step 5: The parser and the decoder</h3>
@@ -483,8 +544,10 @@ export default function NvdecWithRustWgpu() {
         <Source excerpt={src.callbacks} language="cpp" />
         <p>
           The decode callback (lines 267–270) is one line of work: hand the picture to <code>cuvidDecodePicture</code>. The
-          display callback (lines 271–277) doesn&apos;t display anything. It just appends the frame&apos;s info to a queue,{" "}
-          <code>decoded</code>, in display order. The per-frame loop in Step 6 drains that queue. Keeping the callback this
+          display callback (lines 271–277) doesn&apos;t display anything. It just appends the frame&apos;s info to the{" "}
+          <code>decoded</code> queue from <a href="#bridge-object">the Bridge section</a>, in display order, and refuses if
+          the queue has somehow grown to 64 entries, which would mean frames aren&apos;t being consumed. The per-frame loop
+          in Step 6 drains that queue. Keeping the callback this
           small is deliberate: it runs from inside <code>cuvidParseVideoData</code>, and I don&apos;t want to map frames or
           run kernels from there.
         </p>
@@ -538,13 +601,23 @@ export default function NvdecWithRustWgpu() {
           <li><strong>At the end of the file, flush.</strong>{" "}When Media Foundation reported end-of-stream, the parser may
             still be holding frames it hasn&apos;t released. Sending a packet with the <code>ENDOFSTREAM</code> flag (lines
             420–426) tells it no more data is coming, so it releases them all.</li>
-          <li><strong>Once those are drained, rewind.</strong> <code>rewind_video</code> seeks Media Foundation back to
-            time zero and recreates the parser and decoder through <code>create_parser</code>. That&apos;s what makes the
-            clip loop. The parser is only recreated after every frame it held has been consumed, because those frames
-            live in its decoder&apos;s surfaces.</li>
+          <li><strong>Once those are drained, rewind</strong> (line 428), which is what makes the clip loop. The helper
+            that does it is below.</li>
         </ol>
         <p>
           Line 416 is a safety valve: a file with no decodable video would otherwise spin here forever.
+        </p>
+        <Source excerpt={src.rewind} language="cpp" />
+        <p>
+          Lines 354–358 seek the Source Reader back to time zero. Media Foundation seeks take a <code>PROPVARIANT</code>{" "}
+          holding a 64-bit time in 100 ns units, which is the ceremony on lines 354–356. Lines 359–363 reset the
+          per-playthrough state: the end-of-file flags, the timestamp base (so the second loop also starts at zero), and the
+          display queue, which is empty by now anyway. Line 365 recreates the parser and the decoder through{" "}
+          <code>create_parser</code>{" "}from Step 5, because a parser can&apos;t be rewound; it has to see the sequence header
+          again from the start. The comment on line 353 is why the loop above drains the queue first: the frames in it
+          live in the old decoder&apos;s surfaces, and recreating the decoder would destroy them. Notice what is{" "}
+          <em>not</em> reset: <code>framing</code>. The file&apos;s NAL framing doesn&apos;t change between loops, so the
+          first sample&apos;s decision stands.
         </p>
         <p>The second half takes the frame at the front of the queue and maps it:</p>
         <Source excerpt={src.mapFrame} language="cpp" />
@@ -588,9 +661,18 @@ export default function NvdecWithRustWgpu() {
         </ChartFigure>
         <p>
           The plan from Part 1 was: create the texture in D3D12, because that&apos;s the one place both sides can reach.
-          The bridge creates it on wgpu&apos;s own D3D12 device, which the Rust side hands over in Step 9. Here&apos;s the
-          creation, which runs once for each of the three slots:
+          The bridge creates it on wgpu&apos;s own D3D12 device, which the Rust side hands over in Step 9. Each texture,
+          with the CUDA objects that will be stacked on it, is one <code>OutputSlot</code>, and the bridge has an array of
+          three of them (line 94 of the Bridge struct):
         </p>
+        <Source excerpt={src.outputSlot} language="cpp" />
+        <p>
+          The four fields are filled in top to bottom by the code below: the D3D12 resource, then CUDA&apos;s view of its
+          memory, then an array over that memory, then the surface object the kernel writes through. <code>cleanup</code>{" "}
+          destroys them in the reverse order, because each one refers to the one before it, and resets the fields so that
+          calling it twice is harmless. The destructor (Step 9) calls it for each slot.
+        </p>
+        <p>Here&apos;s the creation, which runs once for each of the three slots:</p>
         <Source excerpt={src.createResource} language="cpp" />
         <p>Three settings on the resource make the sharing possible:</p>
         <ul>
@@ -685,7 +767,26 @@ export default function NvdecWithRustWgpu() {
           textures on the <em>same</em>{" "}device wgpu renders with. If wgpu weren&apos;t using D3D12, <code>as_hal</code>{" "}
           returns <code>None</code>{" "}and the program stops here with a clear message. Line 58 opens the bridge, which runs
           all of Part 3&apos;s setup. Lines 66–67 decode two frames before wgpu wraps anything: the frame to show first, and
-          one frame of lookahead (Step 11 explains why there&apos;s a lookahead).
+          one frame of lookahead (Step 11 explains why there&apos;s a lookahead). <code>Self::decode</code> is the Rust
+          wrapper around <code>nv_next</code>, and it returns a <code>DecodedFrame</code>, so here are both:
+        </p>
+        <Source excerpt={src.videoTypes} language="rust" />
+        <p>
+          A <code>DecodedFrame</code> is the answer to one <code>nv_next</code>{" "}call: which slot the frame is in and when
+          it&apos;s due. <code>Video</code> itself holds the bridge pointer, the three wrapped textures (public, because{" "}
+          <code>main.rs</code>{" "}builds bind groups from them), the two frames, and the clock: when playback started, when
+          the pending frame is due, and the last known interval between frames, for files whose timestamps don&apos;t
+          advance. <code>duration_100ns</code>{" "}converts the bridge&apos;s 100-nanosecond ticks to a <code>Duration</code>,
+          clamping negative values to zero and saturating rather than overflowing on absurd inputs.
+        </p>
+        <Source excerpt={src.decode} language="rust" />
+        <p>
+          <code>decode</code> is the only place <code>nv_next</code> is called, and it turns the C convention (return 1 or
+          −1, fetch the message separately) into a Rust <code>Result</code>. Lines 44–46 fetch the bridge&apos;s first error
+          message (the one <code>fail</code> and <code>check</code> stored), copying it out of C memory before it can
+          change. Lines 48–50 refuse a slot number outside 0..3, which would otherwise index past <code>textures</code> in{" "}
+          <code>main.rs</code>. It takes the raw handle rather than <code>&amp;self</code> so that <code>open</code> can
+          call it before <code>Video</code> exists, which is exactly what lines 66–67 do.
         </p>
         <p>The closure starting on line 62 is for cleanup, and I&apos;ll come back to it. Inside it is the import:</p>
         <Source excerpt={src.wrapTextures} language="rust" />
@@ -742,6 +843,16 @@ export default function NvdecWithRustWgpu() {
           <code>Video</code> is dropped, because <code>nv_close</code> tears down the CUDA side while wgpu might still have
           a frame in flight that samples the texture. <code>main.rs</code> handles that by waiting for the device in its own{" "}
           <code>Drop</code>, which runs before <code>Video</code>&apos;s.
+        </p>
+        <p>And <code>nv_close</code> is just <code>delete</code>, so what it actually runs is the bridge&apos;s destructor:</p>
+        <Source excerpt={src.destructor} language="cpp" />
+        <p>
+          Teardown in the reverse order of setup. The parser and decoder go first, because they own NVDEC surfaces; then
+          each slot&apos;s <code>cleanup</code> from Step 7; then the context itself, which has to outlive everything that
+          was created in it, and which is pushed one last time so the destroy calls have a current context. The COM
+          pointers release themselves when reset. Media Foundation and COM are shut down only if this object started them
+          (the two flags from the Bridge struct). The comment on line 123 is the same rule as above, seen from the C++
+          side.
         </p>
 
         <h3 id="sample-in-wgsl">Step 10: Sample the video in WGSL</h3>
@@ -923,84 +1034,27 @@ Swapchain format: Bgra8Unorm`} />
           functions that take an unsigned <code>DWORD</code>; casting once here keeps <code>nvcc</code> from warning at every
           use.
         </p>
-        <p>Lines 32–54 are the color kernel from Step 7. Then a small helper:</p>
-        <Source excerpt={src.utf8} language="cpp" />
-        <p>
-          Rust hands the file path over as a UTF-8 C string (Step 8), and Media Foundation wants a UTF-16 wide string, so
-          this converts it: one call to measure, one to convert, and the trailing NUL that <code>MultiByteToWideChar</code>{" "}
-          counts is dropped. <code>MB_ERR_INVALID_CHARS</code> makes malformed UTF-8 an error rather than a garbled path.
-        </p>
-        <Source excerpt={src.outputSlot} language="cpp" />
-        <p>
-          One <code>OutputSlot</code> per texture: the D3D12 resource and the three CUDA objects stacked on it in Step 7.{" "}
-          <code>cleanup</code> destroys them in the reverse order they were created, because each one refers to the one
-          below it, and resets the fields so calling it twice is harmless.
-        </p>
-        <Source excerpt={src.bridgeState} language="cpp" />
-        <p>This is the state the whole file works on, so it&apos;s worth knowing what each field is for:</p>
-        <ul>
-          <li><strong>Lines 79–81:</strong> the Media Foundation reader and the compressed media type from Step 3, and the
-            D3D12 device from Step 7.</li>
-          <li><strong>Line 82:</strong> whether COM and Media Foundation were started, so the destructor only shuts down
-            what <code>init_media</code> actually started.</li>
-          <li><strong>Line 83:</strong> the end-of-file state machine from Step 6: <code>has_eos</code> is set by the
-            reader, <code>flushed</code> once the parser has been told.</li>
-          <li><strong>Lines 84–85:</strong> the picture size from the media type, and the coded size from the sequence
-            callback, kept separately so a mid-stream size change can be detected.</li>
-          <li><strong>Lines 86–89:</strong>{" "}the codec, the parameter sets, the scratch buffer each converted packet is built
-            in (reused every packet, so there&apos;s no allocation per frame), and the stream&apos;s NAL framing.</li>
-          <li><strong>Line 90:</strong> <code>decoded</code>, the display-order queue the display callback appends to and{" "}
-            <code>next</code> drains.</li>
-          <li><strong>Lines 91–94:</strong> the CUDA context, the parser, the decoder, and the three slots.</li>
-          <li><strong>Lines 95–98:</strong> the first error message, which slot was written last, and the two timestamp
-            fields that turn absolute timestamps into ones relative to the first frame.</li>
-        </ul>
-        <Source excerpt={src.helpers} language="cpp" />
-        <p>
-          Three ways to report an error, for the three kinds of failure in the file. <code>fail</code> takes a plain
-          message, for Media Foundation and D3D12 calls. <code>check</code> takes a driver-API <code>CUresult</code> and
-          looks up its name. <code>check_cuda</code> takes a runtime-API <code>cudaError_t</code> and looks up its
-          description. All three print to stderr immediately and return <code>false</code>, so call sites read as{" "}
-          <code>if (!check(...)) return false;</code>. Line 101 is a small but useful rule: only the <em>first</em> error is
-          kept in <code>error</code>, because the first one is the cause and the ones after it are usually consequences.
-          That&apos;s the message <code>nv_error</code> reports to Rust.
-        </p>
-        <p>
-          <code>push</code> and <code>pop</code> on lines 119–120 are the context discipline from Step 4: every method that
-          touches CUDA pushes the context first and pops it after.
-        </p>
-        <Source excerpt={src.destructor} language="cpp" />
-        <p>
-          Teardown, in the reverse order of setup. The parser and decoder go first, because they own NVDEC surfaces; then
-          each slot&apos;s CUDA objects; then the context itself, which has to outlive everything that was created in it.
-          The COM pointers release themselves when reset. Media Foundation and COM are shut down only if this object started
-          them. The comment on line 123 is the rule Step 9 explained from the other side: wgpu must have released its
-          references to the textures, or at least finished using them, before this runs.
-        </p>
-        <p>
-          Lines 138–184 are <code>init_media</code> (Step 3), 186–262 are <code>init_cuda</code> (Steps 4 and 7), and
-          264–345 are the callbacks, the sequence handler and <code>create_parser</code> (Step 5). The method that ties the
-          setup together is tiny:
-        </p>
+        <p>Then, in file order, and where each piece is explained:</p>
+        <ArticleTable caption="native/video_bridge.cu, by line" columns={["Lines", "What", "Where"]} rows={[
+          ["32–54", "nv12_to_rgba, the color kernel", <a key="a" href="#shared-textures">Step 7</a>],
+          ["56–63", "utf8_to_utf16", <a key="b" href="#read-packets">Step 3</a>],
+          ["64–76", "OutputSlot and its cleanup", <a key="c" href="#shared-textures">Step 7</a>],
+          ["78–120", "The Bridge's fields, error helpers, push and pop", <a key="d" href="#bridge-object">The Bridge object</a>],
+          ["122–136", "The destructor", <a key="e" href="#import-with-wgpu-hal">Step 9</a>],
+          ["138–184", "init_media: open the file, keep it compressed, read the headers", <a key="f" href="#read-packets">Step 3</a>],
+          ["186–262", "init_cuda: match the GPU, create the context and the three shared textures", <span key="g"><a href="#pick-the-gpu">Step 4</a> and <a href="#shared-textures">Step 7</a></span>],
+          ["264–345", "The parser callbacks, on_sequence and create_parser", <a key="h" href="#parser-and-decoder">Step 5</a>],
+          ["346–351", "init: the three setup calls in order", "Below"],
+          ["352–368", "rewind_video", <a key="i" href="#map-a-frame">Step 6</a>],
+          ["369–409", "read_packet: one Media Foundation sample into the parser", <a key="j" href="#read-packets">Step 3</a>],
+          ["411–463", "next: feed until a frame is ready, map it, convert it", <a key="k" href="#map-a-frame">Step 6</a>],
+          ["466–485", "The C exports", <a key="l" href="#c-abi">Step 8</a>],
+        ]} />
+        <p>The one method not shown in the steps is the glue that runs the setup:</p>
         <Source excerpt={src.init} language="cpp" />
         <p>
           The order is forced: the media type gives the frame size that the textures need, the CUDA context has to exist
-          before the parser is created in it, and the parser is created last. Then the one method the steps haven&apos;t
-          shown:
-        </p>
-        <Source excerpt={src.rewind} language="cpp" />
-        <p>
-          This is what <code>next</code> calls at the end of the file to make the clip loop (Step 6). Lines 354–358 seek
-          the Source Reader back to time zero; Media Foundation seeks take a <code>PROPVARIANT</code>{" "}holding a 64-bit time
-          in 100 ns units, which is the ceremony on lines 354–356. Lines 359–363 reset the per-playthrough state: the
-          end-of-file flags, the timestamp base (so the second loop also starts at zero), and the display queue, which is
-          empty by now anyway. Line 365 recreates the parser and the decoder, because the parser can&apos;t be rewound;
-          it has to see the sequence header again from the start. Notice what is <em>not</em> reset: <code>framing</code>.
-          The file&apos;s NAL framing doesn&apos;t change between loops, so the first sample&apos;s decision stands.
-        </p>
-        <p>
-          Lines 369–409 are <code>read_packet</code> (Step 3), 411–463 are <code>next</code> (Step 6), and 466–485 are the C
-          exports (Step 8). The whole file:
+          before the parser is created in it, and the parser is created last. The whole file:
         </p>
         <Source excerpt={src.fullBridge} language="cpp" />
 
@@ -1067,28 +1121,17 @@ Swapchain format: Bgra8Unorm`} />
           provides <code>from_raw</code>. <code>SLOTS</code> on line 8 has to agree with <code>kSlots</code> in the bridge;
           nothing enforces that either.
         </p>
-        <p>Lines 10–20 are the <code>extern &quot;C&quot;</code> block from Step 8. Then the types:</p>
-        <Source excerpt={src.videoTypes} language="rust" />
-        <p>
-          A <code>DecodedFrame</code> is the answer to one <code>nv_next</code>{" "}call: which slot and when it&apos;s due.{" "}
-          <code>Video</code> holds the bridge pointer, the three wrapped textures (public, because <code>main.rs</code>{" "}builds
-          bind groups from them), the two frames from Step 11, and the clock: when playback started, when the pending frame
-          is due, and the last known interval between frames for files whose timestamps don&apos;t advance.{" "}
-          <code>duration_100ns</code>{" "}converts the bridge&apos;s 100-nanosecond ticks to a <code>Duration</code>, clamping
-          negative values to zero and saturating rather than overflowing on absurd inputs.
-        </p>
-        <Source excerpt={src.decode} language="rust" />
-        <p>
-          <code>decode</code> is the only place <code>nv_next</code> is called, and it turns the C convention (return 1 or
-          −1, fetch the message separately) into a Rust <code>Result</code>. Lines 44–46 fetch the bridge&apos;s first error
-          message, copying it out of C memory before it can change. Lines 48–50 refuse a slot number outside 0..3, which
-          would otherwise index past <code>textures</code> in <code>main.rs</code>. It takes the raw handle rather than{" "}
-          <code>&amp;self</code> so that <code>open</code> can call it before <code>Video</code> exists.
-        </p>
-        <p>
-          Lines 54–108 are <code>open</code> (Step 9), 110 is <code>current_slot</code>, 112–136 are <code>update</code>{" "}
-          (Step 11), and 139–145 are <code>Drop</code> (Step 9). The whole file:
-        </p>
+        <p>The rest of the file, in order:</p>
+        <ArticleTable caption="src/video.rs, by line" columns={["Lines", "What", "Where"]} rows={[
+          ["10–20", "The extern \"C\" declarations", <a key="a" href="#c-abi">Step 8</a>],
+          ["22–37", "DecodedFrame, Video and duration_100ns", <a key="b" href="#import-with-wgpu-hal">Step 9</a>],
+          ["40–52", "decode: nv_next as a Result", <a key="c" href="#import-with-wgpu-hal">Step 9</a>],
+          ["54–108", "open: the bridge, the first two frames and the wgpu-hal import", <a key="d" href="#import-with-wgpu-hal">Step 9</a>],
+          ["110", "current_slot", <a key="e" href="#sample-in-wgsl">Step 10</a>],
+          ["112–136", "update: frame timing and the GPU wait", <a key="f" href="#frame-timing">Step 11</a>],
+          ["139–145", "Drop", <a key="g" href="#import-with-wgpu-hal">Step 9</a>],
+        ]} />
+        <p>The whole file:</p>
         <Source excerpt={src.fullVideo} language="rust" />
 
         <h3 id="file-main-rs">src/main.rs</h3>

@@ -177,6 +177,7 @@ export const postRegistry: Post[] = [
       {"id": "dependencies", "title": "Step 1: Dependencies", "level": 3},
       {"id": "build-script", "title": "Step 2: build.rs", "level": 3},
       {"id": "decoding", "title": "Part 3: Decode on the GPU", "level": 2},
+      {"id": "bridge-object", "title": "The Bridge object and its helpers", "level": 3},
       {"id": "read-packets", "title": "Step 3: Read packets", "level": 3},
       {"id": "pick-the-gpu", "title": "Step 4: Pick the GPU", "level": 3},
       {"id": "parser-and-decoder", "title": "Step 5: Parser and decoder", "level": 3},
