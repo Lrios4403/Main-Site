@@ -8,12 +8,16 @@ import type { SyntaxHighlighterProps } from "react-syntax-highlighter";
 import SyntaxHighlighter from "react-syntax-highlighter/dist/esm/prism-light";
 import { createStyleObject } from "react-syntax-highlighter/dist/esm/create-element";
 import bash from "react-syntax-highlighter/dist/esm/languages/prism/bash";
+import cpp from "react-syntax-highlighter/dist/esm/languages/prism/cpp";
 import css from "react-syntax-highlighter/dist/esm/languages/prism/css";
 import json from "react-syntax-highlighter/dist/esm/languages/prism/json";
 import markup from "react-syntax-highlighter/dist/esm/languages/prism/markup";
 import powershell from "react-syntax-highlighter/dist/esm/languages/prism/powershell";
 import python from "react-syntax-highlighter/dist/esm/languages/prism/python";
+import rust from "react-syntax-highlighter/dist/esm/languages/prism/rust";
+import toml from "react-syntax-highlighter/dist/esm/languages/prism/toml";
 import tsx from "react-syntax-highlighter/dist/esm/languages/prism/tsx";
+import wgsl from "react-syntax-highlighter/dist/esm/languages/prism/wgsl";
 import dracula from "react-syntax-highlighter/dist/esm/styles/prism/dracula";
 import CodeBlockClient, { type PreparedVariant } from "./CodeBlockClient";
 import styles from "./CodeBlock.module.css";
@@ -66,6 +70,11 @@ SyntaxHighlighter.registerLanguage("python", python);
 SyntaxHighlighter.registerLanguage("powershell", powershell);
 SyntaxHighlighter.registerLanguage("cmd", cmd);
 SyntaxHighlighter.registerLanguage("json", json);
+// The NVDEC post: Rust, C++ (also the CUDA source), Cargo.toml and WGSL
+SyntaxHighlighter.registerLanguage("rust", rust);
+SyntaxHighlighter.registerLanguage("cpp", cpp);
+SyntaxHighlighter.registerLanguage("toml", toml);
+SyntaxHighlighter.registerLanguage("wgsl", wgsl);
 
 // Each Dracula colour as a short class (CodeBlock.module.css, scoped under .hl),
 // instead of a style attribute on every token. Anything else (bold, other

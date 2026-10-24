@@ -71,7 +71,7 @@ describe("registry", () => {
     validatePosts(postRegistry, new Date().toISOString().slice(0, 10));
     const routes = readdirSync("app/blogs", { withFileTypes: true }).filter(item => item.isDirectory()).map(item => item.name).sort();
     expect(postRegistry.map(post => post.slug).sort()).toEqual(routes);
-    expect(getPublishedPosts().map(post => post.slug)).toEqual(["nextjs-ordered-table-layout", "llms-on-an-intel-npu"]);
+    expect(getPublishedPosts().map(post => post.slug)).toEqual(["nvdec-with-rust-wgpu", "nextjs-ordered-table-layout", "llms-on-an-intel-npu"]);
   });
   test("reject duplicate slug/path, unsafe slug and unresolved author", () => {
     expect(() => validatePosts([fixture(), fixture()], today)).toThrow();
