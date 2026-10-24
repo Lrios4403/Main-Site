@@ -1,5 +1,7 @@
 .contents { min-width: 0; color: #add8e6; font: 16px/1.35 var(--font-toshiba), monospace; }
-.desktop { max-height: calc(100dvh - 32px); overflow-y: auto; }
+/* The window's body scrolls (Contents.tsx sets its max height), not this
+   wrapper, so the scrollbar sits inside the window's frame */
+.desktop { min-width: 0; }
 .contents ul { margin: 0; padding-left: 13px; list-style-type: "→ "; }
 .contents li { padding: 0; margin-bottom: 5px; }
 .contents li::marker { color: #87cefa; }

@@ -2,8 +2,14 @@
 .toolbar { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:8px 12px; border-bottom:1px solid #8cc5e826; color:#a8bfd4; font:12px/1.5 var(--font-geist-mono), monospace; }
 .toolbar button, .expand { cursor:pointer; color:#a6e7d6; font:12px/1.5 var(--font-geist-sans), sans-serif; }
 .toolbar button { padding:4px 8px; border:1px solid #8cc5e833; border-radius:4px; }
+/* .code is the one scroll container, for both axes. The pre inside it must not
+   scroll on its own: in a collapsed block that put the horizontal scrollbar at
+   the bottom of the full-height pre, below the 22rem viewport, where it couldn't
+   be seen. The pre grows to its content's width instead (max-content), so its
+   padding and background follow the text when scrolled sideways. */
 .code { overflow:auto; }
 .code[data-collapsed] { max-height:22rem; }
+.block .code pre { width:max-content; min-width:100%; box-sizing:border-box; overflow:visible; }
 /* .block raises these above the article's pre/p rules (Prose.module.css), so the
    code and the note sit flush inside the block's own border */
 .block .code pre { max-width:none; margin:0; border:0; border-radius:0; box-shadow:none; }
