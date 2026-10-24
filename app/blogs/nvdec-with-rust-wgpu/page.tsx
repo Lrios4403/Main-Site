@@ -880,6 +880,357 @@ Swapchain format: Bgra8Unorm`} />
           [<code key="i">Invalid compressed NAL units (...)</code>, "The packets are neither Annex B nor 4-byte length-prefixed, or the framing changed mid-stream (Step 3)."],
         ]} />
 
+        <h2 id="files">Part 6: Every file, top to bottom</h2>
+        <p>
+          Parts 2 to 4 followed the data: a packet in, a frame out. This part follows the files instead. If you have the
+          project open next to this post, it&apos;s the order to read each file in. The pieces the steps already covered get
+          a pointer back to the step; the pieces they skipped (the helpers, the state, the destructor, the cube geometry,
+          the window loop) are explained here, and each section ends with the whole file. None of this is new design.
+          It&apos;s the glue that holds the steps together, and it&apos;s where most of the small decisions live.
+        </p>
+
+        <h3 id="file-cargo-build">Cargo.toml and build.rs</h3>
+        <p>
+          Both are short enough that Step 1 and Step 2 already show them in full. The one thing to add is how they relate:{" "}
+          <code>Cargo.toml</code> names <code>build.rs</code> as the build script (line 5), and lists <code>cc</code> under{" "}
+          <code>[build-dependencies]</code> rather than <code>[dependencies]</code>, because it&apos;s used by the build
+          script and not by the program. Everything else the program links comes from the <code>rustc-link-lib</code> lines
+          in <code>build.rs</code>, not from Cargo.
+        </p>
+
+        <h3 id="file-video-bridge">native/video_bridge.cu</h3>
+        <p>
+          485 lines, and the file where everything native lives. It&apos;s laid out as: includes and constants, the CUDA
+          kernel, two helper types, the <code>Bridge</code>{" "}object with its methods in the order they&apos;re used, and the
+          C exports at the bottom. Here&apos;s the top:
+        </p>
+        <Source excerpt={src.bridgeIncludes} language="cpp" />
+        <p>
+          Lines 3–4 are Windows header hygiene: <code>NOMINMAX</code> stops <code>windows.h</code> from defining{" "}
+          <code>min</code> and <code>max</code> macros that would break <code>std::max</code> later in the file, and{" "}
+          <code>WIN32_LEAN_AND_MEAN</code>{" "}leaves out the parts of the Windows API this file doesn&apos;t use. The includes
+          then come in groups: Media Foundation (lines 6–8), WRL&apos;s <code>ComPtr</code> for reference-counted COM
+          pointers (line 9), D3D12 (line 10), and both CUDA APIs. That last point matters for reading the rest of the file:{" "}
+          <code>cuda.h</code> is the <em>driver</em> API (functions starting with <code>cu</code>, returning{" "}
+          <code>CUresult</code>), which NVCUVID is built on and which owns the context; <code>cuda_runtime.h</code> is the{" "}
+          <em>runtime</em> API (functions starting with <code>cuda</code>, returning <code>cudaError_t</code>), which has the
+          external-memory import and launches the kernel. The bridge uses both, which is why it has two error-checking
+          helpers below.
+        </p>
+        <p>
+          Lines 27–30 are the constants. <code>kSlots</code> is the number of textures. The two <code>DWORD</code>{" "}
+          constants wrap Media Foundation&apos;s stream selectors, which are defined as negative enum values but passed to
+          functions that take an unsigned <code>DWORD</code>; casting once here keeps <code>nvcc</code> from warning at every
+          use.
+        </p>
+        <p>Lines 32–54 are the color kernel from Step 7. Then a small helper:</p>
+        <Source excerpt={src.utf8} language="cpp" />
+        <p>
+          Rust hands the file path over as a UTF-8 C string (Step 8), and Media Foundation wants a UTF-16 wide string, so
+          this converts it: one call to measure, one to convert, and the trailing NUL that <code>MultiByteToWideChar</code>{" "}
+          counts is dropped. <code>MB_ERR_INVALID_CHARS</code> makes malformed UTF-8 an error rather than a garbled path.
+        </p>
+        <Source excerpt={src.outputSlot} language="cpp" />
+        <p>
+          One <code>OutputSlot</code> per texture: the D3D12 resource and the three CUDA objects stacked on it in Step 7.{" "}
+          <code>cleanup</code> destroys them in the reverse order they were created, because each one refers to the one
+          below it, and resets the fields so calling it twice is harmless.
+        </p>
+        <Source excerpt={src.bridgeState} language="cpp" />
+        <p>This is the state the whole file works on, so it&apos;s worth knowing what each field is for:</p>
+        <ul>
+          <li><strong>Lines 79–81:</strong> the Media Foundation reader and the compressed media type from Step 3, and the
+            D3D12 device from Step 7.</li>
+          <li><strong>Line 82:</strong> whether COM and Media Foundation were started, so the destructor only shuts down
+            what <code>init_media</code> actually started.</li>
+          <li><strong>Line 83:</strong> the end-of-file state machine from Step 6: <code>has_eos</code> is set by the
+            reader, <code>flushed</code> once the parser has been told.</li>
+          <li><strong>Lines 84–85:</strong> the picture size from the media type, and the coded size from the sequence
+            callback, kept separately so a mid-stream size change can be detected.</li>
+          <li><strong>Lines 86–89:</strong>{" "}the codec, the parameter sets, the scratch buffer each converted packet is built
+            in (reused every packet, so there&apos;s no allocation per frame), and the stream&apos;s NAL framing.</li>
+          <li><strong>Line 90:</strong> <code>decoded</code>, the display-order queue the display callback appends to and{" "}
+            <code>next</code> drains.</li>
+          <li><strong>Lines 91–94:</strong> the CUDA context, the parser, the decoder, and the three slots.</li>
+          <li><strong>Lines 95–98:</strong> the first error message, which slot was written last, and the two timestamp
+            fields that turn absolute timestamps into ones relative to the first frame.</li>
+        </ul>
+        <Source excerpt={src.helpers} language="cpp" />
+        <p>
+          Three ways to report an error, for the three kinds of failure in the file. <code>fail</code> takes a plain
+          message, for Media Foundation and D3D12 calls. <code>check</code> takes a driver-API <code>CUresult</code> and
+          looks up its name. <code>check_cuda</code> takes a runtime-API <code>cudaError_t</code> and looks up its
+          description. All three print to stderr immediately and return <code>false</code>, so call sites read as{" "}
+          <code>if (!check(...)) return false;</code>. Line 101 is a small but useful rule: only the <em>first</em> error is
+          kept in <code>error</code>, because the first one is the cause and the ones after it are usually consequences.
+          That&apos;s the message <code>nv_error</code> reports to Rust.
+        </p>
+        <p>
+          <code>push</code> and <code>pop</code> on lines 119–120 are the context discipline from Step 4: every method that
+          touches CUDA pushes the context first and pops it after.
+        </p>
+        <Source excerpt={src.destructor} language="cpp" />
+        <p>
+          Teardown, in the reverse order of setup. The parser and decoder go first, because they own NVDEC surfaces; then
+          each slot&apos;s CUDA objects; then the context itself, which has to outlive everything that was created in it.
+          The COM pointers release themselves when reset. Media Foundation and COM are shut down only if this object started
+          them. The comment on line 123 is the rule Step 9 explained from the other side: wgpu must have released its
+          references to the textures, or at least finished using them, before this runs.
+        </p>
+        <p>
+          Lines 138–184 are <code>init_media</code> (Step 3), 186–262 are <code>init_cuda</code> (Steps 4 and 7), and
+          264–345 are the callbacks, the sequence handler and <code>create_parser</code> (Step 5). The method that ties the
+          setup together is tiny:
+        </p>
+        <Source excerpt={src.init} language="cpp" />
+        <p>
+          The order is forced: the media type gives the frame size that the textures need, the CUDA context has to exist
+          before the parser is created in it, and the parser is created last. Then the one method the steps haven&apos;t
+          shown:
+        </p>
+        <Source excerpt={src.rewind} language="cpp" />
+        <p>
+          This is what <code>next</code> calls at the end of the file to make the clip loop (Step 6). Lines 354–358 seek
+          the Source Reader back to time zero; Media Foundation seeks take a <code>PROPVARIANT</code>{" "}holding a 64-bit time
+          in 100 ns units, which is the ceremony on lines 354–356. Lines 359–363 reset the per-playthrough state: the
+          end-of-file flags, the timestamp base (so the second loop also starts at zero), and the display queue, which is
+          empty by now anyway. Line 365 recreates the parser and the decoder, because the parser can&apos;t be rewound;
+          it has to see the sequence header again from the start. Notice what is <em>not</em> reset: <code>framing</code>.
+          The file&apos;s NAL framing doesn&apos;t change between loops, so the first sample&apos;s decision stands.
+        </p>
+        <p>
+          Lines 369–409 are <code>read_packet</code> (Step 3), 411–463 are <code>next</code> (Step 6), and 466–485 are the C
+          exports (Step 8). The whole file:
+        </p>
+        <Source excerpt={src.fullBridge} language="cpp" />
+
+        <h3 id="file-bitstream-h">native/bitstream.h</h3>
+        <p>
+          A header-only file with no Windows or CUDA in it, on purpose: that&apos;s what lets it be tested anywhere. Four
+          functions build on each other. The first two recognize start codes:
+        </p>
+        <Source excerpt={src.startCode} language="cpp" />
+        <p>
+          <code>start_code_length</code> counts leading zero bytes and expects a <code>01</code> after at least two of them.
+          Accepting <em>two or more</em> zeros rather than exactly two or three matters: the H.264 byte-stream format allows
+          extra <code>zero_byte</code>s before a start code, and some muxers emit them. <code>annexb_prefix</code> adds the
+          requirement that something follows the start code, so a sample that is <em>only</em> a start code is rejected
+          rather than passed to the decoder as an empty NAL unit.
+        </p>
+        <p>
+          Lines 23–48 are <code>length_prefixed</code> and <code>detect_framing</code>, which Step 3 showed. The last
+          function is the one the bridge calls:
+        </p>
+        <Source excerpt={src.normalize} language="cpp" />
+        <p>
+          <code>framing</code> is an in-out parameter. If the caller passes <code>Unknown</code>, line 58 detects the
+          framing from this sample; otherwise the caller&apos;s value is used, and the sample has to match it (lines 60
+          and 63) or the function fails. Annex B input is copied through unchanged (line 61). Length-prefixed input is
+          rebuilt NAL unit by NAL unit, with each length prefix replaced by a 4-byte start code (lines 64–73). Only on
+          success does line 77 write the detected framing back, so a rejected first sample doesn&apos;t lock the stream
+          into a bad guess. The whole file:
+        </p>
+        <Source excerpt={src.fullBitstream} language="cpp" />
+
+        <h3 id="file-bitstream-test">native/tests/bitstream_test.cpp</h3>
+        <p>
+          A plain C++ program with <code>assert</code>s. Its helpers build test input without hand-typing hundreds of bytes:
+        </p>
+        <Source excerpt={src.testHelpers} language="cpp" />
+        <p>
+          <code>convert</code> runs one sample as if it were the first of a stream. <code>length_nal</code> builds a
+          length-prefixed NAL unit of any size; the header byte <code>0x41</code> is a valid H.264 NAL header (forbidden bit
+          clear, type 1, a non-IDR slice), which matters because <code>length_prefixed</code> checks that bit.{" "}
+          <code>annexb_of</code> is an independent, deliberately simple conversion to compare the real one against.
+        </p>
+        <Source excerpt={src.testCases} language="cpp" />
+        <p>
+          The cases follow the comments: Annex B passes through with 4- and 3-byte start codes; length prefixes of 4, 2 and
+          1 bytes convert; then the regression cases for the misread from Step 3. Line 53 is the important assertion there:
+          it checks that the 300-byte sample really does start with what looks like a start code, so the test is exercising
+          the ambiguity and not just a normal conversion. Lines 60–67 test the framing lock in both directions, and the last
+          block covers malformed input. The whole file:
+        </p>
+        <Source excerpt={src.fullTest} language="cpp" />
+
+        <h3 id="file-video-rs">src/video.rs</h3>
+        <p>
+          145 lines: the Rust side of the bridge. It knows about D3D12 resources and wgpu, and nothing about Media
+          Foundation or CUDA.
+        </p>
+        <Source excerpt={src.videoImports} language="rust" />
+        <p>
+          The <code>ffi</code> imports are for the C boundary: <code>CString</code> to pass the path in, <code>CStr</code> to
+          read error messages out, and the raw pointer types. <code>NonNull</code>{" "}is a pointer that can&apos;t be null,
+          which is how <code>Video</code> holds the bridge once <code>nv_open</code> has succeeded. From the{" "}
+          <code>windows</code> crate it needs just <code>ID3D12Resource</code> and the <code>Interface</code> trait that
+          provides <code>from_raw</code>. <code>SLOTS</code> on line 8 has to agree with <code>kSlots</code> in the bridge;
+          nothing enforces that either.
+        </p>
+        <p>Lines 10–20 are the <code>extern &quot;C&quot;</code> block from Step 8. Then the types:</p>
+        <Source excerpt={src.videoTypes} language="rust" />
+        <p>
+          A <code>DecodedFrame</code> is the answer to one <code>nv_next</code>{" "}call: which slot and when it&apos;s due.{" "}
+          <code>Video</code> holds the bridge pointer, the three wrapped textures (public, because <code>main.rs</code>{" "}builds
+          bind groups from them), the two frames from Step 11, and the clock: when playback started, when the pending frame
+          is due, and the last known interval between frames for files whose timestamps don&apos;t advance.{" "}
+          <code>duration_100ns</code>{" "}converts the bridge&apos;s 100-nanosecond ticks to a <code>Duration</code>, clamping
+          negative values to zero and saturating rather than overflowing on absurd inputs.
+        </p>
+        <Source excerpt={src.decode} language="rust" />
+        <p>
+          <code>decode</code> is the only place <code>nv_next</code> is called, and it turns the C convention (return 1 or
+          −1, fetch the message separately) into a Rust <code>Result</code>. Lines 44–46 fetch the bridge&apos;s first error
+          message, copying it out of C memory before it can change. Lines 48–50 refuse a slot number outside 0..3, which
+          would otherwise index past <code>textures</code> in <code>main.rs</code>. It takes the raw handle rather than{" "}
+          <code>&amp;self</code> so that <code>open</code> can call it before <code>Video</code> exists.
+        </p>
+        <p>
+          Lines 54–108 are <code>open</code> (Step 9), 110 is <code>current_slot</code>, 112–136 are <code>update</code>{" "}
+          (Step 11), and 139–145 are <code>Drop</code> (Step 9). The whole file:
+        </p>
+        <Source excerpt={src.fullVideo} language="rust" />
+
+        <h3 id="file-main-rs">src/main.rs</h3>
+        <p>
+          341 lines, and the most ordinary file in the project: a winit window, a wgpu device and a textured cube. The video
+          appears in exactly three places: <code>Video::open</code> in setup, the bind groups, and{" "}
+          <code>video.update</code> plus <code>current_slot</code> in <code>draw</code>. Everything else would be the same in
+          any wgpu program.
+        </p>
+        <Source excerpt={src.mainImports} language="rust" />
+        <p>
+          Line 1 makes the whole program Windows-only at the compiler level, matching the check in <code>build.rs</code>.
+          Line 2 pulls in <code>video.rs</code> as a module. The rest are the four crates: <code>bytemuck</code> for
+          turning structs into bytes, <code>glam</code>{" "}for matrices, wgpu&apos;s <code>DeviceExt</code> for{" "}
+          <code>create_buffer_init</code>, and winit&apos;s 0.30 application API.
+        </p>
+        <Source excerpt={src.vertexCube} language="rust" />
+        <p>
+          <code>Vertex</code> and <code>Uniform</code> are the two structs that cross into the GPU. <code>#[repr(C)]</code>{" "}
+          fixes their memory layout so it matches what the shader expects, and <code>Pod</code> and <code>Zeroable</code>{" "}
+          are bytemuck&apos;s promise that the struct is plain bytes with no padding or pointers, which is what lets{" "}
+          <code>cast_slice</code> and <code>bytes_of</code> hand them to wgpu without copying.
+        </p>
+        <p>
+          <code>cube</code> builds the geometry. Each of the six faces (lines 24–29) is four corners, listed
+          counter-clockwise as seen from outside. Every face gets the same texture coordinates (line 31): <code>v = 1</code>{" "}
+          at the bottom edge and <code>0</code> at the top, because row 0 of the texture is the top of the picture, so the
+          video comes out upright on each face. Lines 34–38 turn each face into four vertices and two triangles (six
+          indices), for 24 vertices and 36 indices in total. The faces share no vertices, because each corner needs a
+          different texture coordinate on each face it belongs to.
+        </p>
+        <p>Lines 42–50 are <code>background</code> from Step 10. Then the depth buffer:</p>
+        <Source excerpt={src.depthTexture} language="rust" />
+        <p>
+          The pipeline doesn&apos;t cull back faces (line 201 below), so without a depth buffer the far faces of the cube
+          could draw over the near ones depending on order. A <code>Depth24Plus</code>{" "}texture the size of the window fixes
+          that, and because it&apos;s tied to the window size, <code>resize</code> recreates it. The <code>max(1)</code>{" "}
+          guards against a zero-sized texture while the window is minimized.
+        </p>
+        <Source excerpt={src.stateStruct} language="rust" />
+        <p>
+          <code>State</code> is everything that exists once the window is up. Field order matters at the end: Rust drops
+          fields in declaration order after <code>Drop::drop</code> runs, so <code>video</code>, declared last, is dropped
+          last, after the GPU wait in <code>State</code>&apos;s <code>Drop</code> below.
+        </p>
+        <p>
+          <code>State::new</code> starts on line 83. Lines 84–105 pick the adapter and create the device (Step 4), line 107
+          opens the video (Step 9; it needs only the device, which is why it can come before the swapchain), and lines
+          109–115 choose the swapchain format (Step 10). The configuration itself:
+        </p>
+        <Source excerpt={src.surfaceConfig} language="rust" />
+        <p>
+          <code>Fifo</code>{" "}is vsync: frames are presented in order at the display&apos;s refresh rate, which is the right
+          choice for video. A maximum frame latency of 2 lets the CPU run one frame ahead of the GPU without letting it
+          run away. <code>alpha_modes[0]</code> is whatever the surface supports first, since the window is opaque.
+        </p>
+        <Source excerpt={src.buffers} language="rust" />
+        <p>
+          Three GPU buffers, created with their initial contents. The vertex and index buffers never change. The uniform
+          buffer holds the model-view-projection matrix and is written every frame, so it needs <code>COPY_DST</code>; it
+          starts as the identity matrix and <code>draw</code> overwrites it before the first use.
+        </p>
+        <Source excerpt={src.bindLayout} language="rust" />
+        <p>
+          The bind group layout is the contract between this file and the shader: binding 0 is a uniform buffer the vertex
+          stage reads, binding 1 is a filterable 2D float texture the fragment stage samples, and binding 2 is the sampler.
+          The numbers match the <code>@binding</code> attributes in <code>cube.wgsl</code>; the <code>filterable</code> and{" "}
+          <code>Filtering</code> flags pair with the linear sampler on lines 161–165, which smooths the 320×180 video when a
+          face is drawn larger than that.
+        </p>
+        <p>
+          Lines 166–176 build one bind group per slot (Step 10). Lines 177–180 compile the shader, which is embedded in the
+          executable with <code>include_str!</code>. Then the pipeline:
+        </p>
+        <Source excerpt={src.pipeline} language="rust" />
+        <p>
+          Most of this is wgpu boilerplate, and three lines carry the decisions. Line 192 declares the vertex layout: a{" "}
+          <code>Float32x3</code> at location 0 and a <code>Float32x2</code> at location 1, which is exactly the{" "}
+          <code>Vertex</code> struct and exactly the <code>@location</code>s in the shader. Line 198 renders to the swapchain
+          format chosen in Step 10, with no blending. Line 201 turns face culling off, so the cube draws the same whichever
+          way its faces wind, and lines 202–208 enable the depth test (<code>Less</code>: a fragment wins if it&apos;s nearer
+          than what&apos;s already there).
+        </p>
+        <Source excerpt={src.resize} language="rust" />
+        <p>
+          On resize, reconfigure the surface to the new size and rebuild the depth buffer to match. A zero size (minimized)
+          is ignored rather than configured, which wgpu would reject.
+        </p>
+        <Source excerpt={src.drawMatrices} language="rust" />
+        <p>
+          <code>draw</code>{" "}runs once per redraw. Line 228 is the video&apos;s one hook: <code>update</code> decides whether
+          the frame changes (Step 11), and a decode error ends the program through the <code>?</code>. Lines 229–233 build
+          the matrix: the model spins about two axes at different rates so no face stays hidden, the camera sits at
+          (3.2, 2.1, 4.6) looking at the origin, and the projection is a 45° perspective at the window&apos;s aspect ratio.
+          Line 234 uploads it.
+        </p>
+        <Source excerpt={src.acquire} language="rust" />
+        <p>
+          Getting the next swapchain image can fail in ways that aren&apos;t errors. <code>Timeout</code> and{" "}
+          <code>Occluded</code> (the window is hidden) just skip this frame. <code>Outdated</code>{" "}(the window changed under
+          us) reconfigures and skips. The two cases that panic are the ones a sample program can&apos;t recover from;
+          a real application would recreate the surface.
+        </p>
+        <Source excerpt={src.renderPass} language="rust" />
+        <p>
+          One render pass: clear the color target to the background from Step 10 and the depth buffer to the far plane,
+          bind the pipeline, bind <em>the current slot&apos;s</em> bind group (line 277, the other video hook), set the
+          buffers, and draw the 36 indices. Line 282 submits the commands and line 284 presents the frame;{" "}
+          <code>pre_present_notify</code> between them is a winit courtesy that lets the compositor time the frame.
+        </p>
+        <Source excerpt={src.stateDrop} language="rust" />
+        <p>
+          The GPU-idle wait that Step 9 promised. It runs before any field is dropped, so by the time <code>video</code>{" "}
+          goes away and closes the bridge, no draw call is still sampling the textures.
+        </p>
+        <Source excerpt={src.app} language="rust" />
+        <p>
+          winit 0.30 drives the program through this handler. <code>resumed</code> (lines 301–309) creates the window and the{" "}
+          <code>State</code>; <code>State::new</code> is <code>async</code>{" "}because wgpu&apos;s adapter and device requests are,
+          and <code>pollster::block_on</code>{" "}simply waits for it, since there&apos;s nothing else to do yet. The guard on line
+          302 keeps a second <code>resumed</code> from building everything twice. <code>window_event</code> (lines 310–323)
+          handles the three events that matter: close, resize, and redraw, where a failed <code>draw</code> prints the error
+          and exits. <code>about_to_wait</code> (lines 324–332) is the frame pacing: when 16 ms have passed, request a
+          redraw and schedule the next one, and tell winit to sleep until then rather than spin.
+        </p>
+        <Source excerpt={src.mainFn} language="rust" />
+        <p>
+          <code>main</code>{" "}takes the video path from the command line and hands the handler to the event loop, which
+          doesn&apos;t return until the window closes. The whole file:
+        </p>
+        <Source excerpt={src.fullMain} language="rust" />
+
+        <h3 id="file-cube-wgsl">src/cube.wgsl</h3>
+        <p>
+          26 lines, shown in full in Step 10. Reading it against <code>main.rs</code>: the three <code>@group(0)
+          @binding(n)</code> declarations are the bind group layout, in the same order; <code>VertexInput</code>&apos;s
+          two <code>@location</code>s are the vertex buffer layout; <code>vs_main</code> multiplies each vertex by the
+          matrix from the uniform buffer and passes the texture coordinate through; and <code>fs_main</code>{" "}samples the
+          video at that coordinate. There&apos;s no lighting, no color correction and no hint that the texture is
+          video. Any WGSL that samples a texture would work here unchanged.
+        </p>
+
         <h2 id="limitations">Limitations and next steps</h2>
         <p>
           This is a demonstration of the interop, not a video player, and I want to be clear about which is which. Here is
