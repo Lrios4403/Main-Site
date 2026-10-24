@@ -247,7 +247,7 @@ export const postRegistry: Post[] = [
         note: "Big Buck Bunny's license.",
       },
     ],
-    readingMinutes: 22,
+    readingMinutes: 40,
     cover: {
       src: "/covers/nvdec-with-rust-wgpu.jpg",
       width: 1200,
