@@ -8,10 +8,14 @@
   gap: 16px;
 }
 
-/* Table of contents stays in view while scrolling the long post */
+/* The table of contents (Contents.tsx) makes itself sticky when it fits in
+   the viewport. A sticky element only moves within its parent, so this
+   wrapper takes the rest of the column's height and passes it down. */
 .toc {
-  position: sticky;
-  top: 1rem;
+  min-width: 0;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Same look as the StartupOS Credits list: the value, then a small label */
