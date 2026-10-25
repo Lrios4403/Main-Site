@@ -104,6 +104,11 @@ export default function Sidebar({ trackViews = true, showNavigation = true }: { 
             </Link>
             <ul className={styles.list}>
               <li>
+                <Link className={styles.navLink} href="/blogs/nvdec-with-rust-wgpu">
+                  NVDEC Video in wgpu
+                </Link>
+              </li>
+              <li>
                 <Link className={styles.navLink} href="/blogs/nextjs-ordered-table-layout">
                   Ordered Table Layout
                 </Link>

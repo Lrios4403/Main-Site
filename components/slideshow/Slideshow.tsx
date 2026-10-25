@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useId, useRef, useState } from "react";
 import nextFlexOrder from "@/public/slides/nextjs-flex-order.jpg";
 import intelNpu from "@/public/slides/intel-npu.webp";
+import nvdecWgpu from "@/public/slides/nvdec-wgpu.webp";
 import archives from "@/public/slides/archive-bg.jpg";
 import styles from "./Slideshow.module.css";
 import mainStyles from "@/components/main/styles.module.css";
@@ -18,6 +19,13 @@ type Slide = {
 };
 
 const slides: Slide[] = [
+  {
+    href: "/blogs/nvdec-with-rust-wgpu",
+    image: nvdecWgpu,
+    category: "Graphics",
+    title: "Video straight to the GPU",
+    description: "Decoding MP4 with NVIDIA NVDEC and sampling the frames in Rust's wgpu, with no trip through system memory.",
+  },
   {
     href: "/projects/archives",
     image: archives,
