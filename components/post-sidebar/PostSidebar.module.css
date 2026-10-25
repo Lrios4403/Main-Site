@@ -8,9 +8,9 @@
   gap: 16px;
 }
 
-/* The table of contents (Contents.tsx) makes itself sticky when it fits in
-   the viewport. A sticky element only moves within its parent, so this
-   wrapper takes the rest of the column's height and passes it down. */
+/* The table of contents (Contents.tsx) is sticky. A sticky element only
+   moves within its parent, so this wrapper takes the rest of the column's
+   height and passes it down. */
 .toc {
   min-width: 0;
   flex: 1 1 auto;

@@ -1,10 +1,11 @@
 /* Fills the sidebar's toc wrapper, so the sticky window inside has the whole
    column to stick in */
 .contents { min-width: 0; flex: 1 1 auto; color: #add8e6; font: 16px/1.35 var(--font-toshiba), monospace; }
-/* Every entry is shown, wrapped; nothing scrolls. The window sticks only when
-   it fits in the viewport (Contents.tsx measures and sets data-fits). */
-.desktop { min-width: 0; }
-.desktop[data-fits] { position: sticky; top: 1rem; }
+/* Sticks while the page scrolls. Contents.tsx caps the window body at 75% of
+   the viewport and lets it scroll vertically; long titles wrap rather than
+   widening the window, so there's never a sideways scroll. */
+.desktop { min-width: 0; position: sticky; top: 1rem; }
+.contents ul, .contents li { min-width: 0; }
 .contents a { overflow-wrap: anywhere; }
 .contents ul { margin: 0; padding-left: 13px; list-style-type: "→ "; }
 .contents li { padding: 0; margin-bottom: 5px; }
