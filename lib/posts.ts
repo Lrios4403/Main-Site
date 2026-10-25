@@ -64,6 +64,15 @@ export const postRegistry: Post[] = [
       },
     ],
     readingMinutes: 10,
+    // Rendered by scripts/covers/nextjs-ordered-table-layout.tsx; the share image and the index card
+    cover: {
+      visible: false,
+      src: "/covers/nextjs-ordered-table-layout.jpg",
+      width: 1200,
+      height: 630,
+      alt: "The post's grid drawn as boxes: a header across the top, a left column of sidebar, stats and filler beside a tall content area, and a footer across the bottom. The stats and content boxes, which each page fills, are blue.",
+      caption: "The example project's grid: the root layout fills the neutral areas, each page fills the blue ones.",
+    },
     title: "Next.js Layouts with CSS Grid Template Areas",
     description:
       "Place components from different Next.js layouts and pages in fixed spots with CSS grid-template-areas: a plain HTML demo, then a full App Router example.",
@@ -237,6 +246,11 @@ export const postRegistry: Post[] = [
         label: "D3D12 resource states",
         href: "https://learn.microsoft.com/en-us/windows/win32/direct3d12/using-resource-barriers-to-synchronize-resource-states-in-direct3d-12",
         note: "Implicit promotion for simultaneous-access textures.",
+      },
+      {
+        label: "Direct3D 12 shared heaps",
+        href: "https://learn.microsoft.com/en-us/windows/win32/direct3d12/shared-heaps",
+        note: "Sharing resources across APIs.",
       },
       {
         label: "NVIDIA Video SDK samples",

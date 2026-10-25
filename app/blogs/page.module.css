@@ -9,10 +9,13 @@
   padding: 0;
 }
 
-/* Each post is a clickable card with a cyan accent stripe on the left */
+/* Each post is a clickable card with a cyan accent stripe on the left: the
+   cover picture, then the title, description and meta row */
 .card {
   position: relative;
-  display: block;
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
   overflow: hidden;
   padding: 1.1rem 1.25rem 1.1rem 1.5rem;
   text-decoration: none;
@@ -49,6 +52,32 @@
   transform: translateY(1px);
 }
 
+/* The cover: the post's 1200x630 share image, as a small framed picture */
+.cover {
+  display: block;
+  flex: 0 0 280px;
+  aspect-ratio: 1200 / 630;
+  overflow: hidden;
+  border: 1px solid rgba(130, 180, 255, 0.25);
+  border-radius: 6px;
+  background: #08101f;
+}
+.cover img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.2s ease;
+}
+.card:hover .cover img {
+  transform: scale(1.03);
+}
+.cardBody {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 .cardHead {
   display: flex;
   align-items: baseline;
@@ -82,6 +111,7 @@
 }
 
 .cardDesc {
+  display: block;
   margin: 0.5rem 0 0;
   font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
   font-size: 0.95rem;
@@ -174,4 +204,10 @@
 .reading { color:#97afc5; }
 .tag { padding:3px 7px; background:transparent; color:#a4bfd3; }
 .card:focus-visible { outline:2px solid #a6e7d6; outline-offset:3px; }
-@media(prefers-reduced-motion:reduce) { .card, .card::before, .readMore, .arrow { transition:none; } }
+@media(prefers-reduced-motion:reduce) { .card, .card::before, .readMore, .arrow, .cover img { transition:none; } }
+
+/* Narrow: the picture goes above the text, full width */
+@media (max-width: 768px) {
+  .card { flex-direction: column; gap: 14px; }
+  .cover { flex: none; width: 100%; }
+}

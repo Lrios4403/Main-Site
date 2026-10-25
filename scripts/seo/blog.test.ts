@@ -105,7 +105,7 @@ describe("registry", () => {
 
 describe("metadata and graph", () => {
   test("cover and update are truly optional", () => {
-    const post = fixture({ updated: undefined });
+    const post = fixture({ updated: undefined, cover: undefined });
     const metadata = buildPostMetadata(post);
     expect(metadata.title).toBe(post.title);
     expect(metadata.alternates?.canonical).toBe(absoluteUrl(post.path));

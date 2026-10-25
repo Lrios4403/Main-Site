@@ -1,0 +1,24 @@
+/* A callout: the code-block frame (same border, radius and dark panel) with a
+   title strip whose colour says what kind it is. Two-class selectors so the
+   body's paragraphs outrank the article's p rules (Prose.module.css). */
+.callout { margin: 20px 0; border: 1px solid #8cc5e833; border-radius: 6px; overflow: hidden; background: #0b1730; }
+.callout .strip {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px;
+  margin: 0; padding: 7px 14px; max-width: none;
+  color: #d6ebff; font: 12px/1.5 var(--font-toshiba), monospace;
+  box-shadow: inset 1px 1px #ffffff14;
+}
+.callout .kind { letter-spacing: 0.04em; text-transform: uppercase; }
+.callout .title { color: #eaf6ff; font: 500 14px/1.4 var(--font-geist-sans), sans-serif; }
+.callout .body { padding: 12px 16px 14px; font-size: 15px; line-height: 1.6; }
+.callout .body > p { max-width: none; margin: 0 0 10px; }
+.callout .body > ul, .callout .body > ol { max-width: none; margin: 0 0 10px; }
+.callout .body > :last-child { margin-bottom: 0; }
+
+/* The kinds: the title bar's blue for "where we are", the site's teal for
+   "why", and amber for a gotcha */
+.callout[data-kind="where"] .strip { background: linear-gradient(90deg, #163876, #165279); }
+.callout[data-kind="why"] .strip { background: linear-gradient(90deg, #0f4d44, #156f66); }
+.callout[data-kind="why"] { border-color: #5fd3c04d; }
+.callout[data-kind="gotcha"] .strip { background: linear-gradient(90deg, #6b3410, #8a4b1a); }
+.callout[data-kind="gotcha"] { border-color: #f0b06a4d; }

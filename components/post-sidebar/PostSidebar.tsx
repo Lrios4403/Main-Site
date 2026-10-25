@@ -2,9 +2,11 @@ import { getAuthor } from "@/lib/blog/authors";
 import type { ArticleMeta, ArticleResource } from "@/lib/blog/types";
 import type { ReactNode } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import styles from "@/components/main/styles.module.css";
 import Window from "@/components/window/Window";
 import { formatDate } from "@/lib/blog/dates";
+import { faviconFor } from "@/lib/favicons";
 import side from "./PostSidebar.module.css";
 
 export type Resource = ArticleResource;
@@ -22,10 +24,16 @@ export default function PostSidebar({ post, infoTitle = "Author & post info", re
   const author = getAuthor(post?.authorId ?? "logan-rios");
   const referenceList = (items: Resource[]) => (
     <ul className={side.list}>
-      {items.map(item => <li key={item.href}>
-        <a href={item.href} target="_blank" rel="noopener noreferrer">{item.label}</a>
-        {item.note && <span className={side.note}>{item.note}</span>}
-      </li>)}
+      {items.map(item => {
+        const icon = faviconFor(item.href);
+        return <li key={item.href}>
+          <a className={side.external} href={item.href} target="_blank" rel="noopener noreferrer">
+            {icon && <Image className={side.favicon} src={icon} alt="" width={16} height={16} />}
+            {item.label}
+          </a>
+          {item.note && <span className={side.note}>{item.note}</span>}
+        </li>;
+      })}
     </ul>
   );
   return (

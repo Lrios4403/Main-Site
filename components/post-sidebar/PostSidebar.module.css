@@ -53,6 +53,18 @@
   font-style: italic;
   color: #c9d6ec;
 }
+/* An external link with the site's favicon in front (lib/favicons.ts) */
+.external {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.favicon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+}
 .note {
   margin-top: 2px;
   font-size: 12px;

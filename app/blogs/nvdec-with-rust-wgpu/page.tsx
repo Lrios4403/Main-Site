@@ -6,6 +6,8 @@ import ArticleTable from "@/components/article/ArticleTable";
 import { CodeBlock } from "@/components/article/CodeBlock";
 import FileTree from "@/components/article/FileTree";
 import Note from "@/components/article/Note";
+import Callout from "@/components/article/Callout";
+import LinkCards from "@/components/article/LinkCards";
 import ChartFigure from "@/components/article/charts/ChartFigure";
 import { getPost } from "@/lib/posts";
 import { buildPostMetadata } from "@/lib/blog/metadata";
@@ -219,10 +221,10 @@ export default function NvdecWithRustWgpu() {
         </p>
 
         <h2 id="setup">Part 2: Set up the project</h2>
-        <p>
-          <strong>Where we are:</strong>{" "}nothing is built yet. This part gets a Rust project that can compile a CUDA file
-          and link against the NVIDIA SDK. It&apos;s mostly plumbing, but two of the problems I hit were here.
-        </p>
+        <Callout kind="where">
+          <p>Nothing is built yet. This part gets a Rust project that can compile a CUDA file and link against the NVIDIA
+            SDK. It&apos;s mostly plumbing, but two of the problems I hit were here.</p>
+        </Callout>
 
         <h3 id="what-you-need">What you need</h3>
         <ul>
@@ -313,21 +315,23 @@ export default function NvdecWithRustWgpu() {
             <code>cuda</code> for the CUDA driver API, <code>d3d12</code> and <code>dxgi</code>, and the three Media
             Foundation libraries plus <code>ole32</code> for COM.</li>
         </ul>
-        <p>
-          Two lines took real digging, and they&apos;re both about the same problem: ending up with two C runtimes in one
-          executable. Rust links against the DLL version of the Microsoft C runtime. Some of NVIDIA&apos;s libraries are
-          built against the <em>static</em>{" "}version. Link both and you get warning LNK4098, and a program that may or may
-          not work depending on which runtime&apos;s <code>malloc</code> a given pointer came from.
-        </p>
-        <ul>
-          <li><strong><code>.cudart(&quot;shared&quot;)</code> on line 27.</strong> In CUDA mode, <code>cc</code> quietly
-            links <code>cudart_static.lib</code> by default, the static-runtime build. Asking for <code>&quot;shared&quot;</code>{" "}
-            links <code>cudart.lib</code> instead, which matches Rust.</li>
-          <li><strong><code>/NODEFAULTLIB:LIBCMT</code> on line 42.</strong> In CUDA 13, <code>cuda.lib</code>{" "}isn&apos;t
-            an import library but a small static loader for the driver, also built against the static runtime. This flag
-            tells the linker to ignore its request for <code>LIBCMT</code> and bind it to the same runtime as everything
-            else.</li>
-        </ul>
+        <Callout kind="gotcha" title="Two C runtimes in one executable">
+          <p>
+            Two lines took real digging, and they&apos;re both about the same problem. Rust links against the DLL version of
+            the Microsoft C runtime. Some of NVIDIA&apos;s libraries are built against the <em>static</em>{" "}version. Link
+            both and you get warning LNK4098, and a program that may or may not work depending on which runtime&apos;s{" "}
+            <code>malloc</code> a given pointer came from.
+          </p>
+          <ul>
+            <li><strong><code>.cudart(&quot;shared&quot;)</code> on line 27.</strong> In CUDA mode, <code>cc</code> quietly
+              links <code>cudart_static.lib</code> by default, the static-runtime build. Asking for <code>&quot;shared&quot;</code>{" "}
+              links <code>cudart.lib</code> instead, which matches Rust.</li>
+            <li><strong><code>/NODEFAULTLIB:LIBCMT</code> on line 42.</strong> In CUDA 13, <code>cuda.lib</code>{" "}isn&apos;t
+              an import library but a small static loader for the driver, also built against the static runtime. This flag
+              tells the linker to ignore its request for <code>LIBCMT</code> and bind it to the same runtime as everything
+              else.</li>
+          </ul>
+        </Callout>
         <p>
           A side effect worth knowing: both <code>cuda.lib</code> and <code>cudart.lib</code>{" "}load the driver&apos;s{" "}
           <code>nvcuda.dll</code> at run time, so the finished executable needs the NVIDIA driver but no CUDA Toolkit DLLs.
@@ -335,13 +339,15 @@ export default function NvdecWithRustWgpu() {
         </p>
 
         <h2 id="decoding">Part 3: Decode on the GPU</h2>
-        <p>
-          <strong>Where we are:</strong> the project builds. Now I need the bridge to open a file and produce decoded frames
-          in GPU memory. All of Part 3 is <code>native/video_bridge.cu</code>, in the order the bridge does things at
-          startup: open the file, find the GPU, set up the decoder, then the per-frame loop, then the textures the frames
-          go into. The bridge is one C++ object, <code>Bridge</code>, that owns everything, and every step below calls a
-          few small helpers on it. So before the steps, the object and the helpers.
-        </p>
+        <Callout kind="where">
+          <p>
+            The project builds. Now I need the bridge to open a file and produce decoded frames in GPU memory. All of Part 3
+            is <code>native/video_bridge.cu</code>, in the order the bridge does things at startup: open the file, find the
+            GPU, set up the decoder, then the per-frame loop, then the textures the frames go into. The bridge is one C++
+            object, <code>Bridge</code>, that owns everything, and every step below calls a few small helpers on it. So
+            before the steps, the object and the helpers.
+          </p>
+        </Callout>
 
         <h3 id="bridge-object">The Bridge object and its helpers</h3>
         <p>
@@ -400,12 +406,14 @@ export default function NvdecWithRustWgpu() {
         </p>
         <p>First, the boilerplate: COM and Media Foundation have to be started, and the file opened.</p>
         <Source excerpt={src.startMf} language="cpp" />
-        <p>
-          Line 141 is a wrinkle of running inside a windowed Rust program. COM has threading modes, and winit has usually
-          already initialized COM on the UI thread in &ldquo;single-threaded apartment&rdquo; mode. Asking for
-          multithreaded mode then fails with <code>RPC_E_CHANGED_MODE</code>, which isn&apos;t really an error, just COM
-          saying the thread is already set up differently. So the bridge accepts whichever mode the thread has.
-        </p>
+        <Callout kind="gotcha" title="COM is already initialized by the time the bridge runs">
+          <p>
+            Line 141 is a wrinkle of running inside a windowed Rust program. COM has threading modes, and winit has usually
+            already initialized COM on the UI thread in &ldquo;single-threaded apartment&rdquo; mode. Asking for
+            multithreaded mode then fails with <code>RPC_E_CHANGED_MODE</code>, which isn&apos;t really an error, just COM
+            saying the thread is already set up differently. So the bridge accepts whichever mode the thread has.
+          </p>
+        </Callout>
         <p>
           Line 147 calls the one helper that isn&apos;t on the <code>Bridge</code>. Rust hands the file path over as a UTF-8
           C string (Step 8), and Media Foundation wants a UTF-16 wide string:
@@ -452,17 +460,21 @@ export default function NvdecWithRustWgpu() {
           that, so the bridge accepts both and converts if needed. That logic is in <code>native/bitstream.h</code>:
         </p>
         <Source excerpt={src.framing} language="cpp" />
-        <p>
-          My first version of this was wrong in a way that&apos;s instructive. It checked whether the sample started with a
-          start code and, if so, passed it through unchanged. The trouble is that a 4-byte length of 300 is{" "}
-          <code>00 00 01 2C</code>, which looks exactly like a start code followed by a byte. So any length-prefixed sample
-          whose first NAL unit was 256–511 bytes long (or exactly 1 byte, <code>00 00 00 01</code>) was sent to the decoder
-          with its length prefixes still in it. The fix is to make the length-prefixed test the strict one and try it first:
-          the lengths must cover the sample exactly, every NAL unit must be non-empty, and every NAL header&apos;s top bit
-          (the <em>forbidden zero bit</em>, which the standards require to be 0) must be clear. Real Annex B data practically
-          never passes that test by accident. And once the first sample has decided the framing, every later sample has to
-          match it.
-        </p>
+        <Callout kind="gotcha" title="A length prefix that looks like a start code">
+          <p>
+            My first version of this was wrong in a way that&apos;s instructive. It checked whether the sample started with a
+            start code and, if so, passed it through unchanged. The trouble is that a 4-byte length of 300 is{" "}
+            <code>00 00 01 2C</code>, which looks exactly like a start code followed by a byte. So any length-prefixed sample
+            whose first NAL unit was 256–511 bytes long (or exactly 1 byte, <code>00 00 00 01</code>) was sent to the decoder
+            with its length prefixes still in it.
+          </p>
+          <p>
+            The fix is to make the length-prefixed test the strict one and try it first: the lengths must cover the sample
+            exactly, every NAL unit must be non-empty, and every NAL header&apos;s top bit (the <em>forbidden zero bit</em>,
+            which the standards require to be 0) must be clear. Real Annex B data practically never passes that test by
+            accident. And once the first sample has decided the framing, every later sample has to match it.
+          </p>
+        </Callout>
         <p>With that in place, reading one packet looks like this:</p>
         <Source excerpt={src.readPacket} language="cpp" />
         <p>
@@ -637,13 +649,18 @@ export default function NvdecWithRustWgpu() {
         <p>
           Lines 445–448 launch the kernel: one thread per pixel, in 16×16 blocks, reading the NV12 frame and writing RGBA
           into the chosen slot&apos;s surface (the kernel and the surface are Step 7). Lines 449–450 wait for it to finish.
-          Then line 452 unmaps the frame, and the order here is a rule, not a preference. The mapped surface is borrowed
-          from the decoder&apos;s output pool. NVIDIA&apos;s guide says at most <code>ulNumOutputSurfaces</code> frames can
-          be mapped at once, and that <code>cuvidUnmapVideoFrame</code>{" "}&ldquo;must be called to make the output surface
-          available&rdquo; again. If I unmapped before the kernel finished reading, the decoder could reuse that surface
-          while the kernel was still reading it. The <code>cudaDeviceSynchronize</code>{" "}on line 450 is what makes the unmap
-          safe. (It&apos;s also a blocking wait, which Step 11 comes back to.)
+          Then line 452 unmaps the frame.
         </p>
+        <Callout kind="why" title="Unmap only after the kernel has finished">
+          <p>
+            The order here is a rule, not a preference. The mapped surface is borrowed from the decoder&apos;s output pool.
+            NVIDIA&apos;s guide says at most <code>ulNumOutputSurfaces</code> frames can be mapped at once, and that{" "}
+            <code>cuvidUnmapVideoFrame</code>{" "}&ldquo;must be called to make the output surface available&rdquo; again. If
+            I unmapped before the kernel finished reading, the decoder could reuse that surface while the kernel was still
+            reading it. The <code>cudaDeviceSynchronize</code>{" "}on line 450 is what makes the unmap safe. (It&apos;s also a
+            blocking wait, which Step 11 comes back to.)
+          </p>
+        </Callout>
         <p>
           Lines 457–462 record the result: which slot has the frame, and its timestamp made relative to the first frame,
           so playback starts at zero no matter what the file&apos;s first timestamp is.
@@ -723,12 +740,13 @@ export default function NvdecWithRustWgpu() {
         </p>
 
         <h2 id="into-wgpu">Part 4: Hand the frames to wgpu</h2>
-        <p>
-          <strong>Where we are:</strong> the bridge can open a file and, on each call to <code>nv_next</code>, leave a
-          converted RGBA frame in one of three D3D12 textures. None of that is visible to Rust yet. This part crosses the
-          language boundary and then does the wgpu-hal import, which is the step that makes the textures usable by the
-          renderer.
-        </p>
+        <Callout kind="where">
+          <p>
+            The bridge can open a file and, on each call to <code>nv_next</code>, leave a converted RGBA frame in one of
+            three D3D12 textures. None of that is visible to Rust yet. This part crosses the language boundary and then does
+            the wgpu-hal import, which is the step that makes the textures usable by the renderer.
+          </p>
+        </Callout>
 
         <h3 id="c-abi">Step 8: A small C ABI</h3>
         <p>
@@ -861,26 +879,30 @@ export default function NvdecWithRustWgpu() {
           in the rendering code knows that. Each slot gets its own bind group, sharing the same uniform buffer and sampler:
         </p>
         <Source excerpt={src.bindGroups} language="rust" />
-        <p>
-          Why one bind group per slot rather than one bind group I rebind? Because a bind group is immutable once created,
-          and this way switching frames costs nothing: draw with whichever group matches the slot the bridge last reported.
-        </p>
+        <Callout kind="why" title="One bind group per slot">
+          <p>
+            Why one bind group per slot rather than one bind group I rebind? Because a bind group is immutable once created,
+            and this way switching frames costs nothing: draw with whichever group matches the slot the bridge last reported.
+          </p>
+        </Callout>
         <Source excerpt={src.setBindGroup} language="rust" />
         <p>And the shader has no idea any of this happened:</p>
         <Source excerpt={src.shader} language="wgsl" />
-        <p>
-          One thing in this step did go wrong, and it&apos;s worth telling because it&apos;s easy to repeat. My first version
-          picked an sRGB swapchain format, which is the usual advice for wgpu programs, and the video came out pale and
-          washed out:
-        </p>
-        <ArticleFigure media={COLOR_COMPARISON} />
-        <p>
-          The cause took a while to see. The kernel in Step 7 writes <em>display-encoded</em> RGB, the gamma-encoded values a
-          video player would put on screen. It writes them into an <code>Rgba8Unorm</code> texture, and wgpu samples that
-          format as-is, treating the values as linear. Then the sRGB swapchain gamma-encodes everything written to it. So the
-          video was gamma-encoded twice, which pushes midtones toward white. The fix is to render to a non-sRGB swapchain
-          format, so the values reach the screen unchanged, the way a video player would show them:
-        </p>
+        <Callout kind="gotcha" title="Gamma applied twice: the washed-out video">
+          <p>
+            One thing in this step did go wrong, and it&apos;s worth telling because it&apos;s easy to repeat. My first version
+            picked an sRGB swapchain format, which is the usual advice for wgpu programs, and the video came out pale and
+            washed out:
+          </p>
+          <ArticleFigure media={COLOR_COMPARISON} />
+          <p>
+            The cause took a while to see. The kernel in Step 7 writes <em>display-encoded</em> RGB, the gamma-encoded values
+            a video player would put on screen. It writes them into an <code>Rgba8Unorm</code> texture, and wgpu samples that
+            format as-is, treating the values as linear. Then the sRGB swapchain gamma-encodes everything written to it. So
+            the video was gamma-encoded twice, which pushes midtones toward white. The fix is to render to a non-sRGB
+            swapchain format, so the values reach the screen unchanged, the way a video player would show them:
+          </p>
+        </Callout>
         <Source excerpt={src.swapchain} language="rust" />
         <p>
           That has one knock-on effect. wgpu treats clear colors as linear only on sRGB targets, so the window&apos;s
@@ -922,27 +944,31 @@ export default function NvdecWithRustWgpu() {
           by falling back to the last known frame interval.
         </p>
         <p>
-          Then there&apos;s the part I&apos;ve been deferring: <strong>synchronization</strong>, lines 117–118. Here is the
-          problem. The bridge decodes into slot <code>(current + 1) % 3</code>. With one slot on screen and one holding the
-          lookahead, that&apos;s the slot that was on screen two frames ago. &ldquo;Was on screen&rdquo; is from the CPU&apos;s
-          point of view; the GPU runs behind the CPU, and a draw call that samples that slot may not have executed yet. If
-          CUDA writes into it now, that draw samples a half-written frame. Nothing in D3D12, CUDA or wgpu prevents this on
-          its own, because none of them knows what the others are doing with the memory.
+          Then there&apos;s the part I&apos;ve been deferring: <strong>synchronization</strong>, lines 117–118.
         </p>
-        <p>
-          The conservative answer, and the one this code uses, is to wait. Before every decode, line 117 waits until the GPU
-          has finished everything wgpu submitted (<code>device.poll(Wait)</code>). And in Step 6, the bridge waits for the
-          kernel to finish before returning (<code>cudaDeviceSynchronize</code>). Between the two waits, CUDA never writes a
-          slot the GPU might be reading, and wgpu never samples a slot CUDA is still writing.
-        </p>
-        <p>
-          That makes it correct, but not concurrent. Decode, conversion and rendering happen strictly one after another, and
-          at 24 frames per second on a 320×180 clip nobody notices. At 4K it would. The three slots are there for the real
-          fix: give each slot a D3D12 fence, import it into CUDA as an external semaphore, and have each side wait only for
-          the slot it needs. Then decoding could move to its own thread, and three slots would become true triple buffering.
-          I stopped short of that because it&apos;s a post of its own, and because the version with the waits is the one
-          where every step is easy to follow.
-        </p>
+        <Callout kind="why" title="Why every frame waits for the GPU">
+          <p>
+            Here is the problem. The bridge decodes into slot <code>(current + 1) % 3</code>. With one slot on screen and one
+            holding the lookahead, that&apos;s the slot that was on screen two frames ago. &ldquo;Was on screen&rdquo; is from
+            the CPU&apos;s point of view; the GPU runs behind the CPU, and a draw call that samples that slot may not have
+            executed yet. If CUDA writes into it now, that draw samples a half-written frame. Nothing in D3D12, CUDA or wgpu
+            prevents this on its own, because none of them knows what the others are doing with the memory.
+          </p>
+          <p>
+            The conservative answer, and the one this code uses, is to wait. Before every decode, line 117 waits until the
+            GPU has finished everything wgpu submitted (<code>device.poll(Wait)</code>). And in Step 6, the bridge waits for
+            the kernel to finish before returning (<code>cudaDeviceSynchronize</code>). Between the two waits, CUDA never
+            writes a slot the GPU might be reading, and wgpu never samples a slot CUDA is still writing.
+          </p>
+          <p>
+            That makes it correct, but not concurrent. Decode, conversion and rendering happen strictly one after another,
+            and at 24 frames per second on a 320×180 clip nobody notices. At 4K it would. The three slots are there for the
+            real fix: give each slot a D3D12 fence, import it into CUDA as an external semaphore, and have each side wait
+            only for the slot it needs. Then decoding could move to its own thread, and three slots would become true
+            triple buffering. I stopped short of that because it&apos;s a post of its own, and because the version with the
+            waits is the one where every step is easy to follow.
+          </p>
+        </Callout>
 
         <h2 id="run-it">Part 5: Build and run</h2>
         <p>
@@ -1367,16 +1393,8 @@ Swapchain format: Bgra8Unorm`} />
 
         <h2 id="references">References and updates</h2>
         <p><time dateTime="2026-10-24">October 24, 2026</time>: first version.</p>
-        <ul>
-          <li><a href={NVDEC_GUIDE} {...ext}>NVDEC Video Decoder API Programming Guide 13.1</a>: the parser, its callbacks, decoder creation, mapping and output surfaces.</li>
-          <li><a href="https://developer.nvidia.com/video-codec-sdk" {...ext}>NVIDIA Video Codec SDK</a>: the headers and libraries the bridge builds against.</li>
-          <li><a href={CUDA_INTEROP} {...ext}>CUDA external resource interoperability</a>: <code>cudaImportExternalMemory</code>, mapped arrays, and external semaphores.</li>
-          <li><a href={SOURCE_READER} {...ext}>Media Foundation Source Reader</a>: reading samples, native compressed types and seeking.</li>
-          <li><a href="https://learn.microsoft.com/en-us/windows/win32/direct3d12/shared-heaps" {...ext}>Direct3D 12 shared heaps</a>: sharing resources across APIs.</li>
-          <li><a href={D3D12_STATES} {...ext}>Direct3D 12 resource states</a>: implicit promotion and decay for simultaneous-access textures.</li>
-          <li><a href={WGPU_DEVICE} {...ext}>wgpu 30.0.1 <code>Device</code></a>: <code>as_hal</code> and <code>create_texture_from_hal</code>, with their safety requirements.</li>
-          <li><a href="https://github.com/NVIDIA/video-sdk-samples" {...ext}>NVIDIA Video SDK samples</a>: NVIDIA&apos;s fuller decoder examples, which demux with FFmpeg.</li>
-        </ul>
+        {/* The same list as the Resources window in the sidebar (lib/posts.ts) */}
+        <LinkCards items={info.resources} />
     </ArticleShell>
     </SiteLayout>
   );
