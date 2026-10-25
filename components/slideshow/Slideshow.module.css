@@ -106,22 +106,27 @@
 .title { margin: 0; font-size: clamp(15px, 1.5vw, 18px); font-weight: 600; line-height: 1.3; letter-spacing: -0.025em; }
 .description { margin: 6px 0 10px; color: #b3c6da; font-size: 13px; line-height: 1.45; }
 .cta { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: auto; padding-top: 8px; border-top: 1px solid #8cc5e820; color: #a6e7d6; font-size: 12px; font-weight: 500; }
-.controls { display: none; }
+/* Arrows and dots, rendered only when the slides don't all fit (Slideshow.tsx) */
+.controls { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; }
+.dots { display: flex; gap: 2px; }
+.controls button { display: grid; place-items: center; width: 32px; height: 28px; padding: 0; cursor: pointer; }
+.arrow { border: 1px solid #8cc5e833; border-radius: 6px; background: #172b42; color: #c5e9f1; font-size: 16px; }
+.arrow:hover:not(:disabled) { border-color: #9fdfdb99; background: #1d3550; }
+.arrow:disabled { opacity: 0.3; cursor: default; }
+.dot { border: 0; background: transparent; }
+.dot span { width: 7px; height: 7px; border-radius: 8px; background: #627d95; transition: width 180ms ease, background 180ms ease; }
+.dot[aria-current="true"] span { width: 22px; background: #a6e7d6; }
 
 @media (max-width: 768px) {
   .slideshow { padding: 8px; }
   .slide { flex-basis: 100%; }
   .title { font-size: 18px; }
-  .controls { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; }
-  .dots { display: flex; gap: 4px; }
-  .controls button { display: grid; place-items: center; width: 44px; height: 44px; cursor: pointer; }
-  .arrow { border: 1px solid #8cc5e833; border-radius: 6px; background: #172b42; color: #c5e9f1; font-size: 20px; }
-  .arrow:disabled { opacity: 0.3; cursor: default; }
-  .dot { border: 0; background: transparent; }
-  .dot span { width: 7px; height: 7px; border-radius: 8px; background: #627d95; }
-  .dot[aria-current="true"] span { width: 22px; background: #a6e7d6; }
+  /* Bigger touch targets on a phone */
+  .dots { gap: 4px; }
+  .controls button { width: 44px; height: 44px; }
+  .arrow { font-size: 20px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .card { transition: none; }
+  .card, .dot span { transition: none; }
 }

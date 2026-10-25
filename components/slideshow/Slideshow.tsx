@@ -2,7 +2,7 @@
 
 import Image, { type StaticImageData } from "next/image";
 import Link from "next/link";
-import { useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import nextFlexOrder from "@/public/slides/nextjs-flex-order.jpg";
 import intelNpu from "@/public/slides/intel-npu.webp";
 import nvdecWgpu from "@/public/slides/nvdec-wgpu.webp";
@@ -49,10 +49,44 @@ const slides: Slide[] = [
   },
 ];
 
+// The distance between two cards, and how far the track can scroll
+function metrics(list: HTMLUListElement) {
+  const first = list.children[0] as HTMLElement | undefined;
+  const second = list.children[1] as HTMLElement | undefined;
+  const step = first && second ? second.offsetLeft - first.offsetLeft : 0;
+  return { step, max: list.scrollWidth - list.clientWidth };
+}
+
 export default function Slideshow({ className }: { className?: string }) {
   const track = useRef<HTMLUListElement>(null);
   const trackId = useId();
   const [active, setActive] = useState(0);
+  // How many scroll positions the track has: one per slide on a phone (one card
+  // across), slides minus visible cards plus one on desktop (three across), and
+  // 1 when everything fits, which hides the controls
+  const [positions, setPositions] = useState(1);
+
+  // Uses only the ref and state setters, so it never changes
+  const syncActive = useCallback(() => {
+    const list = track.current;
+    if (!list) return;
+    const { step, max } = metrics(list);
+    const count = step > 0 && max > 1 ? Math.round(max / step) + 1 : 1;
+    setPositions(count);
+    // At the far end the last position is active even if the snap leaves a fraction
+    const index = list.scrollLeft >= max - 1 ? count - 1 : Math.round(list.scrollLeft / (step || 1));
+    setActive(Math.max(0, Math.min(count - 1, index)));
+  }, []);
+
+  // Recount when the track's size changes (window resize, the phone/desktop layout switch)
+  useEffect(() => {
+    const list = track.current;
+    if (!list) return;
+    syncActive();
+    const observer = new ResizeObserver(syncActive);
+    observer.observe(list);
+    return () => observer.disconnect();
+  }, [syncActive]);
 
   function goTo(index: number) {
     const list = track.current;
@@ -62,15 +96,6 @@ export default function Slideshow({ className }: { className?: string }) {
       left: slide.offsetLeft - (list.children[0] as HTMLElement).offsetLeft,
       behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
     });
-  }
-
-  function syncActive() {
-    const list = track.current;
-    if (!list) return;
-    const first = list.children[0] as HTMLElement;
-    const second = list.children[1] as HTMLElement;
-    const step = second.offsetLeft - first.offsetLeft;
-    if (step > 0) setActive(Math.max(0, Math.min(slides.length - 1, Math.round(list.scrollLeft / step))));
   }
 
   return (
@@ -97,15 +122,18 @@ export default function Slideshow({ className }: { className?: string }) {
           </li>
         ))}
       </ul>
-      <div className={styles.controls}>
-        <button type="button" className={styles.arrow} onClick={() => goTo(active - 1)} disabled={active === 0} aria-label="Previous featured item" aria-controls={trackId}>←</button>
-        <div className={styles.dots}>
-          {slides.map((slide, index) => (
-            <button key={slide.href} type="button" className={styles.dot} onClick={() => goTo(index)} aria-label={`Show ${slide.title}`} aria-current={index === active ? "true" : undefined} aria-controls={trackId}><span /></button>
-          ))}
+      {/* Only when the slides don't all fit: one dot per scroll position */}
+      {positions > 1 && (
+        <div className={styles.controls}>
+          <button type="button" className={styles.arrow} onClick={() => goTo(active - 1)} disabled={active === 0} aria-label="Previous featured item" aria-controls={trackId}>←</button>
+          <div className={styles.dots}>
+            {slides.slice(0, positions).map((slide, index) => (
+              <button key={slide.href} type="button" className={styles.dot} onClick={() => goTo(index)} aria-label={`Show from ${slide.title}`} aria-current={index === active ? "true" : undefined} aria-controls={trackId}><span /></button>
+            ))}
+          </div>
+          <button type="button" className={styles.arrow} onClick={() => goTo(active + 1)} disabled={active >= positions - 1} aria-label="Next featured item" aria-controls={trackId}>→</button>
         </div>
-        <button type="button" className={styles.arrow} onClick={() => goTo(active + 1)} disabled={active === slides.length - 1} aria-label="Next featured item" aria-controls={trackId}>→</button>
-      </div>
+      )}
     </section>
   );
 }
