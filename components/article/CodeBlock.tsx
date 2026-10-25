@@ -169,7 +169,8 @@ function render(code: string, language: string, kind: Kind, startLine: number): 
 // variants shows a dropdown in its toolbar; the first variant is the default.
 export type CodeVariant = { label: string; code: string; language?: string; note?: ReactNode };
 
-export function CodeBlock({code = "", variants, language = "text", filename, className, kind = "code", label, startLine = 1}: {code?: string; variants?: CodeVariant[]; language?: string; filename?: string; className?: string; kind?: Kind; label?: string; startLine?: number}) {
+// href: where the code lives (an excerpt's lines on GitHub); the toolbar's title links there
+export function CodeBlock({code = "", variants, language = "text", filename, className, kind = "code", label, startLine = 1, href}: {code?: string; variants?: CodeVariant[]; language?: string; filename?: string; className?: string; kind?: Kind; label?: string; startLine?: number; href?: string}) {
   const list: { label?: string; code: string; language?: string; note?: ReactNode }[] = variants?.length ? variants : [{ code, language }];
   const prepared: PreparedVariant[] = list.map((variant) => {
     // One line ending everywhere: the browser's HTML parser turns \r into \n,
@@ -179,5 +180,5 @@ export function CodeBlock({code = "", variants, language = "text", filename, cla
   });
   const lang = list[0].language ?? language;
   const title = filename || label || ({command:"Command", diagram:"Diagram", config:"Configuration", output:"Output", code:lang === "text" ? "Example" : lang}[kind]);
-  return <CodeBlockClient title={title} label={label} className={className} variants={prepared} />;
+  return <CodeBlockClient title={title} label={label} className={className} variants={prepared} href={href} />;
 }

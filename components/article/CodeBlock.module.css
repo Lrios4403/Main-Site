@@ -18,6 +18,11 @@
 
 .toolbar { font-family:var(--font-toshiba),monospace; background:linear-gradient(90deg,#163876,#165279); color:#d6ebff; box-shadow:inset 1px 1px #ffffff14; }
 .toolbar button, .expand { font-family:var(--font-toshiba),monospace; }
+/* A title that links to the code's source (an excerpt's lines on GitHub) */
+.toolbar .source { color:inherit; text-decoration:underline; text-decoration-color:#d6ebff59; text-underline-offset:3px; overflow-wrap:anywhere; }
+.toolbar .source::after { content:" ↗"; opacity:.7; }
+.toolbar .source:hover { color:#ffffff; text-decoration-color:currentColor; }
+.toolbar .source:focus-visible { outline:2px solid #a6e7d6; outline-offset:2px; }
 
 .code .plain { margin:0; padding:16px; white-space:pre; font:13px/1.65 var(--font-geist-mono),monospace; color:#dbe7ff; background:#070f1e; }
 

@@ -26,11 +26,18 @@ const D3D12_STATES = "https://learn.microsoft.com/en-us/windows/win32/direct3d12
 const SOURCE_READER = "https://learn.microsoft.com/en-us/windows/win32/medfound/processing-media-data-with-the-source-reader";
 const ext = { target: "_blank", rel: "noopener noreferrer" } as const;
 
-// A verbatim excerpt of the project, labelled with its file and real line numbers
+// The project on GitHub, and the commit the excerpts were read from (code.ts)
+const REPO = src.REPO;
+const COMMIT_SHORT = src.COMMIT.slice(0, 7);
+const COMMIT_URL = `${REPO}/tree/${src.COMMIT}`;
+
+// A verbatim excerpt of the project, labelled with its file and real line numbers;
+// the label links to those lines on GitHub, at the commit the excerpt came from
 function Source({ excerpt, language }: { excerpt: src.Excerpt; language: string }) {
   const last = excerpt.start + excerpt.code.split("\n").length - 1;
   return <CodeBlock code={excerpt.code} language={language} startLine={excerpt.start}
-    filename={excerpt.start === 1 ? excerpt.file : `${excerpt.file}, lines ${excerpt.start}–${last}`} />;
+    filename={excerpt.whole ? excerpt.file : `${excerpt.file}, lines ${excerpt.start}–${last}`}
+    href={`${REPO}/blob/${src.COMMIT}/${excerpt.file}${excerpt.whole ? "" : `#L${excerpt.start}-L${last}`}`} />;
 }
 
 const COLOR_COMPARISON = {
@@ -64,6 +71,11 @@ export default function NvdecWithRustWgpu() {
           an MP4 on all six faces. The cube itself is ordinary wgpu, and you could replace it with anything. The work, and
           this post, is about getting the frames there. I&apos;ll go through it in the order I built it, explaining at each
           step what I needed, why I did it this way, and what the code is doing.
+        </p>
+        <p>
+          The full project is on GitHub at{" "}
+          <a href={REPO} {...ext}>Lrios4403/nvdec-wgpu-cube</a>. Every code block below is a verbatim excerpt of it, and
+          each block&apos;s file name links to those exact lines.
         </p>
 
         <h2 id="tldr">The short version</h2>
@@ -252,7 +264,10 @@ export default function NvdecWithRustWgpu() {
           Seven files. If you only read two, read <code>native/video_bridge.cu</code> (everything that talks to Media
           Foundation, NVDEC and CUDA) and <code>src/video.rs</code> (the Rust side of the bridge and the wgpu-hal import).
           The rest is setup and a standard wgpu cube that could be any mesh, a fullscreen quad or a material in an engine.
+          To follow along with the files open, clone{" "}
+          <a href={REPO} {...ext}>the repository</a>:
         </p>
+        <CodeBlock kind="command" language="bash" code={`git clone ${REPO}.git\ncd nvdec-wgpu-cube`} />
         <FileTree title="nvdec-wgpu-cube" nodes={[
           { name: "Cargo.toml", href: "#dependencies", note: "wgpu 30.0.1 with only the DX12 backend" },
           { name: "build.rs", href: "#build-script", note: "compiles the CUDA bridge with nvcc and links the SDKs" },
@@ -972,7 +987,8 @@ export default function NvdecWithRustWgpu() {
 
         <h2 id="run-it">Part 5: Build and run</h2>
         <p>
-          <strong>Step 12.</strong> No developer prompt is needed; <code>cc</code> finds the Visual Studio compiler for{" "}
+          <strong>Step 12.</strong> From a clone of <a href={REPO} {...ext}>the repository</a> (or your own copy built
+          from the steps above). No developer prompt is needed; <code>cc</code> finds the Visual Studio compiler for{" "}
           <code>nvcc</code> on its own. The only thing to set is where the Video Codec SDK is. In PowerShell:
         </p>
         <CodeBlock kind="command" language="powershell" label="PowerShell" code={`$env:VIDEO_CODEC_SDK_DIR = "C:\\path\\to\\Video_Codec_SDK_13.1.15"
@@ -1019,8 +1035,8 @@ Swapchain format: Bgra8Unorm`} />
 
         <h2 id="files">Part 6: Every file, top to bottom</h2>
         <p>
-          Parts 2 to 4 followed the data: a packet in, a frame out. This part follows the files instead. If you have the
-          project open next to this post, it&apos;s the order to read each file in. The pieces the steps already covered get
+          Parts 2 to 4 followed the data: a packet in, a frame out. This part follows the files instead. If you have{" "}
+          <a href={REPO} {...ext}>the project</a>{" "}open next to this post, it&apos;s the order to read each file in. The pieces the steps already covered get
           a pointer back to the step; the pieces they skipped (the helpers, the state, the destructor, the cube geometry,
           the window loop) are explained here, and each section ends with the whole file. None of this is new design.
           It&apos;s the glue that holds the steps together, and it&apos;s where most of the small decisions live.
@@ -1370,8 +1386,10 @@ Swapchain format: Bgra8Unorm`} />
           twice.
         </p>
         <Note>
-          The examples in this post are verbatim excerpts of the project, with their real line numbers, as it was on
-          October 24, 2026.
+          The examples in this post are verbatim excerpts of{" "}
+          <a href={REPO} {...ext}>Lrios4403/nvdec-wgpu-cube</a>, with their real line numbers, at commit{" "}
+          <a href={COMMIT_URL} {...ext}><code>{COMMIT_SHORT}</code></a>. Each code block&apos;s file name links to its
+          lines there.
         </Note>
 
         <h2 id="glossary">Terms used in this post</h2>

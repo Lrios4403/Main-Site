@@ -10,7 +10,7 @@ import styles from "./CodeBlock.module.css";
 // the browser.
 export type PreparedVariant = { label?: string; note?: ReactNode; html: string; lines: number };
 
-export default function CodeBlockClient({title, label, className, variants}: {title: string; label?: string; className?: string; variants: PreparedVariant[]}) {
+export default function CodeBlockClient({title, label, className, variants, href}: {title: string; label?: string; className?: string; variants: PreparedVariant[]; href?: string}) {
  const [message, setMessage] = useState("Copy");
  const [expanded, setExpanded] = useState(false);
  const [index, setIndex] = useState(0);
@@ -34,7 +34,9 @@ export default function CodeBlockClient({title, label, className, variants}: {ti
              {variants.map((item, i) => <option key={item.label ?? i} value={i}>{item.label}</option>)}
            </select>
          </label>
-       : <span>{name}</span>}
+       : href
+         ? <a className={styles.source} href={href} target="_blank" rel="noopener noreferrer" title="View these lines on GitHub">{name}</a>
+         : <span>{name}</span>}
      <button type="button" onClick={copy} aria-live="polite">{message}</button>
    </div>
    {variant.note && <p className={styles.note}>{variant.note}</p>}

@@ -218,6 +218,11 @@ export const postRegistry: Post[] = [
     ],
     resources: [
       {
+        label: "Project source (GitHub)",
+        href: "https://github.com/Lrios4403/nvdec-wgpu-cube",
+        note: "The full project every excerpt in this post comes from.",
+      },
+      {
         label: "NVDEC programming guide",
         href: "https://docs.nvidia.com/video-technologies/video-codec-sdk/13.1/nvdec-video-decoder-api-prog-guide/index.html",
         note: "NVIDIA's guide to the parser, decoder and mapping (SDK 13.1).",
